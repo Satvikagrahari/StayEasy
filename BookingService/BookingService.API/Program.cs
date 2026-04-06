@@ -1,5 +1,6 @@
 using BookingService.Application.Interfaces.Services;
 using BookingService.Infrastructure.Data;
+using BookingService.Infrastructure.Messaging;
 using BookingService.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -89,6 +90,10 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+//================= RabbitMQ =================
+builder.Services.AddSingleton<RabbitMQPublisher>();
+
 
 var app = builder.Build();
 

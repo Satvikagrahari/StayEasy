@@ -21,11 +21,6 @@ public class AuthService : IAuthService
         _config = config;
     }
 
-
-
-
-
-    
     public async Task SignupAsync(SignupRequest request)
     {
         var email = request.Email.Trim().ToLowerInvariant();

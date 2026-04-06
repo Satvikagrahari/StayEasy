@@ -1,11 +1,12 @@
-﻿using BookingService.Domain.Entities;
-using BookingService.Infrastructure.Data;
+﻿using BookingService.Application.DTOs.Request;
 using BookingService.Application.Interfaces.Services;
+using BookingService.Domain.Entities;
+using BookingService.Infrastructure.Data;
+using BookingService.Infrastructure.Messaging;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using BookingService.Application.DTOs.Request;
-using Microsoft.EntityFrameworkCore;
 
 namespace BookingService.Infrastructure.Services
 {
@@ -17,7 +18,13 @@ namespace BookingService.Infrastructure.Services
         {
             _context = context;
         }
+        private readonly RabbitMQPublisher _publisher;
 
+        public BookingService(BookingDbContext context, RabbitMQPublisher publisher)
+        {
+            _context = context;
+            _publisher = publisher;
+        }
         public async Task CreateBookingAsync(Guid userId, CreateBookingRequest request)
         {
             var booking = new Booking
@@ -34,6 +41,15 @@ namespace BookingService.Infrastructure.Services
 
             await _context.Bookings.AddAsync(booking);
             await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+
+            _publisher.PublishBookingCreated(new
+            {
+                booking.Id,
+                booking.UserId,
+                booking.HotelId,
+                booking.TotalPrice
+            });
         }
 
         public async Task<List<Booking>> GetUserBookingsAsync(Guid userId)

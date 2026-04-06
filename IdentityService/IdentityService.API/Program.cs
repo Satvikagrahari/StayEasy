@@ -1,9 +1,10 @@
+using IdentityService.Application.Interfaces.Services;
+using IdentityService.Domain.Entities;
+using IdentityService.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using IdentityService.Application.Interfaces.Services;
-using IdentityService.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,25 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    if (!context.Users.Any(u => u.Email == "admin@stayeasy.com"))
+    {
+        var admin = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "admin@stayeasy.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+            PhoneNumber = "9125219430",
+            Role = "Admin"
+        };
+
+        context.Users.Add(admin);
+        context.SaveChanges();
+    }
+}
 
 app.UseMiddleware<ExceptionMiddleware>();
 
