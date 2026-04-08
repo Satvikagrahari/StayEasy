@@ -6,11 +6,12 @@ using System.Text;
 
 namespace BookingService.Application.Interfaces.Services
 {
-    public interface IBookingService
+    public interface ICartService
     {
-        Task CreateBookingAsync(Guid userId, CreateBookingRequest request);
+        Task AddToCartAsync(Guid userId, CreateCartItemRequest request);
 
-        Task<List<Booking>> GetUserBookingsAsync(Guid userId);
-        Task<Guid> CheckoutAsync(Guid userId);
+        Task<Cart> GetCartAsync(Guid userId);
+
+        Task RemoveItemAsync(Guid userId, Guid itemId);
     }
 }

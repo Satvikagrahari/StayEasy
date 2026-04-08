@@ -2,17 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CatalogService.Domain.Entities
+namespace CatalogService.Application.DTOs.Response
 {
-    public class Hotel
+    public class HotelResponseDto
     {
         public Guid HotelId { get; set; }
-
         public string Name { get; set; }
-
         public string City { get; set; }
 
-        public string Address { get; set; }
-        public List<RoomType> RoomTypes { get; set; }
+        public List<RoomTypeDto> RoomTypes { get; set; }
     }
 }

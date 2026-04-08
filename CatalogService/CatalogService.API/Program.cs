@@ -52,10 +52,6 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 
-
-
-
-
 //jwt
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 

@@ -16,7 +16,7 @@ namespace AdminService.API.Controller
             _httpClient = httpClient;
         }
 
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("hotels")]
         public async Task<IActionResult> CreateHotel([FromBody] CreateHotelRequest request)
         {
@@ -25,5 +25,6 @@ namespace AdminService.API.Controller
 
             return StatusCode((int)response.StatusCode);
         }
+
     }
 }

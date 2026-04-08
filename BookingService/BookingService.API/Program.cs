@@ -20,7 +20,7 @@ builder.Services.AddDbContext<BookingDbContext>(options =>
 // ================= DI =================
 //builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IBookingService, BookingService.Infrastructure.Services.BookingService>();
-
+builder.Services.AddScoped<ICartService, CartService>();
 // ================= JWT =================
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 

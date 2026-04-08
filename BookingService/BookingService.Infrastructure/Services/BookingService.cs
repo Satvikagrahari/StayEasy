@@ -58,5 +58,35 @@ namespace BookingService.Infrastructure.Services
                 .Where(x => x.UserId == userId)
                 .ToListAsync();
         }
+        public async Task<Guid> CheckoutAsync(Guid userId)
+        {
+            var cart = await _context.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == "Active");
+
+            if (cart == null || !cart.Items.Any())
+                throw new Exception("Cart is empty");
+
+            var total = cart.Items.Sum(i => i.PriceSnapshot);
+
+            var booking = new Booking
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TotalAmount = total,
+                Status = "Pending",
+                BookingDate = DateTime.UtcNow
+            };
+
+            await _context.Bookings.AddAsync(booking);
+
+            // OPTIONAL: create BookingItems later
+
+            cart.Status = "CheckedOut";
+
+            await _context.SaveChangesAsync();
+
+            return booking.Id;
+        }
     }
 }

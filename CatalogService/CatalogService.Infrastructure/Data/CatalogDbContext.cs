@@ -14,12 +14,13 @@ namespace CatalogService.Infrastructure.Data
         }
 
         public DbSet<Hotel> Hotels { get; set; }
+        public DbSet<RoomType> RoomTypes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Hotel>()
-                .Property(h => h.PricePerNight)
-                .HasPrecision(18, 2); 
+            modelBuilder.Entity<RoomType>()
+                .Property(h=>h.PricePerNight)
+                .HasPrecision(18, 2);
         }
     }
 }

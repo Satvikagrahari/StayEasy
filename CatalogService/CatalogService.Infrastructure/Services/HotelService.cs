@@ -1,8 +1,9 @@
-﻿using CatalogService.Application.Interfaces.Services;
-using CatalogService.Application.DTOs.Request;
+﻿using CatalogService.Application.DTOs.Request;
+using CatalogService.Application.DTOs.Response;
+using CatalogService.Application.Interfaces.Services;
 using CatalogService.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 using CatalogService.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace CatalogService.Application.Services
 {
@@ -20,23 +21,69 @@ namespace CatalogService.Application.Services
         {
             var hotel = new Hotel
             {
-                Id = Guid.NewGuid(),
+                HotelId = Guid.NewGuid(),
                 Name = request.Name,
                 City = request.City,
                 Address = request.Address,
-                PricePerNight = request.PricePerNight
+                
             };
 
             await _context.Hotels.AddAsync(hotel);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Hotel>> GetAllHotelsAsync()
+        //public async Task<List<Hotel>> GetAllHotelsAsync()
+        //{
+        //    return await _context.Hotels
+        //        .AsNoTracking()
+        //        .ToListAsync();
+        //}
+        public async Task<List<HotelResponseDto>> GetHotelsAsync(string? roomType)
         {
-            return await _context.Hotels
-                .AsNoTracking()
-                .ToListAsync();
+            var query = _context.Hotels
+                .Include(h => h.RoomTypes)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(roomType))
+            {
+                query = query.Where(h =>
+                    h.RoomTypes.Any(r => r.Name == roomType));
+            }
+
+            var hotels = await query.ToListAsync();
+
+            return hotels.Select(h => new HotelResponseDto
+            {
+                HotelId = h.HotelId,
+                Name = h.Name,
+                City = h.City,
+
+                RoomTypes = h.RoomTypes.Select(r => new RoomTypeDto
+                {
+                    RoomTypeId = r.RoomTypeId,
+                    Name = r.Name,
+                    PricePerNight = r.PricePerNight
+                }).ToList()
+            }).ToList();
         }
+
+        public async Task AddRoomTypeAsync(CreateRoomTypeRequest request)
+        {
+            var room = new RoomType
+            {
+                RoomTypeId = Guid.NewGuid(),
+                HotelId = request.HotelId,
+                Name = request.Name,
+                Description = request.Description,
+                MaxGuests = request.MaxGuests,
+                PricePerNight = request.PricePerNight,
+                TotalRooms = request.TotalRooms
+            };
+
+            await _context.RoomTypes.AddAsync(room);
+            await _context.SaveChangesAsync();
+        }
+
 
         public async Task<Hotel> GetHotelByIdAsync(Guid id)
         {

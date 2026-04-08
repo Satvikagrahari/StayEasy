@@ -39,5 +39,16 @@ namespace BookingService.API.Controllers
 
             return Ok(bookings);
         }
+
+        [Authorize]
+        [HttpPost("checkout")]
+        public async Task<IActionResult> Checkout()
+        {
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var bookingId = await _bookingService.CheckoutAsync(userId);
+
+            return Ok(new { bookingId });
+        }
     }
 }
