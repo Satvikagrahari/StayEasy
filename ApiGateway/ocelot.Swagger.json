@@ -1,0 +1,44 @@
+﻿{
+  "SwaggerEndPoints": [
+    {
+      "Key": "identity",
+      "Config": [
+        {
+          "Name": "IdentityService",
+          "Version": "v1",
+          "Url": "https://localhost:7006/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "catalog",
+      "Config": [
+        {
+          "Name": "CatalogService",
+          "Version": "v1",
+          "Url": "https://localhost:7092/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "booking",
+      "Config": [
+        {
+          "Name": "BookingService",
+          "Version": "v1",
+          "Url": "https://localhost:7071/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "admin",
+      "Config": [
+        {
+          "Name": "AdminService",
+          "Version": "v1",
+          "Url": "https://localhost:7070/swagger/v1/swagger.json"
+        }
+      ]
+    }
+  ]
+}

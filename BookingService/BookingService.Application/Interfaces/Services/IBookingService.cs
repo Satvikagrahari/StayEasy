@@ -8,9 +8,12 @@ namespace BookingService.Application.Interfaces.Services
 {
     public interface IBookingService
     {
-        Task CreateBookingAsync(Guid userId, CreateBookingRequest request);
+        //Task CreateBookingAsync(Guid userId, CreateBookingRequest request);
 
         Task<List<Booking>> GetUserBookingsAsync(Guid userId);
         Task<Guid> CheckoutAsync(Guid userId);
+        Task<List<Booking>> GetPendingBookingsAsync();
+        Task<List<Booking>> GetConfirmedBookingsAsync();
+        Task<bool> UpdateBookingStatusAsync(Guid bookingId, string status);
     }
 }

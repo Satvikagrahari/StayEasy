@@ -14,7 +14,7 @@ namespace CatalogService.Application.DTOs.Request
         //public string RoomTypeId { get; set; }
 
         [Required]
-        public string Name { get; set; }
+        public string Type { get; set; } //deluxe,suite etc
 
         public string Description { get; set; }
 

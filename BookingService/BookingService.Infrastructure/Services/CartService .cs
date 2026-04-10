@@ -5,6 +5,7 @@ using BookingService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Json;
 using System.Text;
 
 namespace BookingService.Infrastructure.Services
@@ -14,10 +15,13 @@ namespace BookingService.Infrastructure.Services
     public class CartService : ICartService
     {
         private readonly BookingDbContext _context;
+        private readonly HttpClient _httpClient;
 
-        public CartService(BookingDbContext context)
+        public CartService(BookingDbContext context, HttpClient httpClient)
         {
             _context = context;
+            _httpClient = httpClient;
+
         }
 
         public async Task AddToCartAsync(Guid userId, CreateCartItemRequest request)
@@ -39,7 +43,11 @@ namespace BookingService.Infrastructure.Services
                 await _context.Carts.AddAsync(cart);
                 await _context.SaveChangesAsync();
             }
+            var room = await _httpClient.GetFromJsonAsync<RoomTypeDto>(
+                $"https://localhost:7092/api/hotels/rooms/{request.RoomTypeId}");
 
+            if (room == null)
+                throw new Exception("Room not found");
             var item = new CartItem
             {
                 CartItemId = Guid.NewGuid(),
@@ -49,7 +57,7 @@ namespace BookingService.Infrastructure.Services
                 CheckInDate = request.CheckInDate,
                 CheckOutDate = request.CheckOutDate,
                 Guests = request.Guests,
-                PriceSnapshot = 1000
+                PriceSnapshot = room.PricePerNight
             };
 
             await _context.CartItems.AddAsync(item);
@@ -69,6 +77,7 @@ namespace BookingService.Infrastructure.Services
                 UserId = userId,
                 Items = new List<CartItem>()
             };
+
         }
 
         public async Task RemoveItemAsync(Guid userId, Guid itemId)

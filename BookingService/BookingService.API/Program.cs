@@ -20,7 +20,8 @@ builder.Services.AddDbContext<BookingDbContext>(options =>
 // ================= DI =================
 //builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IBookingService, BookingService.Infrastructure.Services.BookingService>();
-builder.Services.AddScoped<ICartService, CartService>();
+//builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddHttpClient<ICartService, CartService>();
 // ================= JWT =================
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
@@ -93,6 +94,10 @@ builder.Services.AddSwaggerGen(options =>
 
 //================= RabbitMQ =================
 builder.Services.AddSingleton<RabbitMQPublisher>();
+builder.Services.AddSingleton<RabbitMQConsumer>();
+
+
+
 
 
 var app = builder.Build();
@@ -108,5 +113,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+var consumer = app.Services.GetRequiredService<RabbitMQConsumer>();
+_ = Task.Run(() => consumer.StartListening());
 
 app.Run();

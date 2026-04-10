@@ -18,10 +18,11 @@ namespace BookingService.Domain.Entities
 
         public int Guests { get; set; }
 
-        public decimal TotalPrice { get; set; }
+        //public decimal TotalPrice { get; set; }
         public decimal TotalAmount { get; set; }
 
         public DateTime BookingDate { get; set; } = DateTime.UtcNow;
+        public List<BookingItem> BookingItems { get; set; }
 
         public string Status { get; set; } = "Pending";
     }

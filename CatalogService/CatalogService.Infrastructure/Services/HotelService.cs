@@ -24,8 +24,10 @@ namespace CatalogService.Application.Services
                 HotelId = Guid.NewGuid(),
                 Name = request.Name,
                 City = request.City,
+                Country = request.Country,
                 Address = request.Address,
-                
+                Description = request.Description,
+                StarRating = request.StarRating
             };
 
             await _context.Hotels.AddAsync(hotel);
@@ -47,7 +49,7 @@ namespace CatalogService.Application.Services
             if (!string.IsNullOrEmpty(roomType))
             {
                 query = query.Where(h =>
-                    h.RoomTypes.Any(r => r.Name == roomType));
+                    h.RoomTypes.Any(r => r.Type == roomType));
             }
 
             var hotels = await query.ToListAsync();
@@ -61,7 +63,7 @@ namespace CatalogService.Application.Services
                 RoomTypes = h.RoomTypes.Select(r => new RoomTypeDto
                 {
                     RoomTypeId = r.RoomTypeId,
-                    Name = r.Name,
+                    Name = r.Type,
                     PricePerNight = r.PricePerNight
                 }).ToList()
             }).ToList();
@@ -73,7 +75,7 @@ namespace CatalogService.Application.Services
             {
                 RoomTypeId = Guid.NewGuid(),
                 HotelId = request.HotelId,
-                Name = request.Name,
+                Type = request.Type,
                 Description = request.Description,
                 MaxGuests = request.MaxGuests,
                 PricePerNight = request.PricePerNight,
@@ -93,6 +95,22 @@ namespace CatalogService.Application.Services
                 throw new ApplicationException("Hotel not found");
 
             return hotel;
+        }
+
+        public async Task<RoomTypeDto> GetRoomByIdAsync(Guid roomTypeId)
+        {
+            var room = await _context.RoomTypes
+                .FirstOrDefaultAsync(r => r.RoomTypeId == roomTypeId);
+
+            if (room == null)
+                throw new Exception("Room not found");
+
+            return new RoomTypeDto
+            {
+                RoomTypeId = room.RoomTypeId,
+                Name = room.Type, // or Name depending on your entity
+                PricePerNight = room.PricePerNight
+            };
         }
     }
 }
