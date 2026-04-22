@@ -38,12 +38,45 @@ namespace CatalogService.API.Controllers
         //}
 
         [Authorize(Roles = "Admin")]
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> UpdateHotel(Guid id, [FromBody] UpdateHotelRequest request)
+        {
+            var updated = await _hotelService.UpdateHotelAsync(id, request);
+            if (!updated)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeactivateHotel(Guid id)
+        {
+            var deactivated = await _hotelService.DeactivateHotelAsync(id);
+            if (!deactivated)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost("rooms")]
         public async Task<IActionResult> AddRoom(CreateRoomTypeRequest request)
         {
             await _hotelService.AddRoomTypeAsync(request);
 
             return Ok("Room type added");
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("rooms/{id:guid}")]
+        public async Task<IActionResult> UpdateRoom(Guid id, [FromBody] UpdateRoomTypeRequest request)
+        {
+            var updated = await _hotelService.UpdateRoomTypeAsync(id, request);
+            if (!updated)
+                return NotFound();
+
+            return NoContent();
         }
 
         [HttpGet]
@@ -61,7 +94,7 @@ namespace CatalogService.API.Controllers
             return Ok(result);
         }
 
-       
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)

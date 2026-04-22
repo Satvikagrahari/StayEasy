@@ -20,6 +20,8 @@ namespace CatalogService.Domain.Entities
 
         public int StarRating { get; set; }
 
+        public bool IsActive { get; set; } = true;
+
         public List<RoomType> RoomTypes { get; set; }
     }
 }

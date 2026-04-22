@@ -1,33 +1,32 @@
-using Microsoft.OpenApi;
+using MMLib.SwaggerForOcelot.DependencyInjection;
+using MMLib.SwaggerForOcelot.Middleware;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
-builder.Services.AddOcelot();
+// Ocelot + Swagger config
+builder.Configuration
+    .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"ocelot.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("auth", new OpenApiInfo { Title = "Auth Service", Version = "v1" });
-    options.SwaggerDoc("catalog", new OpenApiInfo { Title = "Catalog Service", Version = "v1" });
-    options.SwaggerDoc("booking", new OpenApiInfo { Title = "Booking Service", Version = "v1" });
-    options.SwaggerDoc("admin", new OpenApiInfo { Title = "Admin Service", Version = "v1" });
-});
+builder.Services.AddOcelot(builder.Configuration);
+builder.Services.AddSwaggerForOcelot(builder.Configuration);
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("/swagger/auth/swagger.json", "Auth Service");
-    options.SwaggerEndpoint("/swagger/catalog/swagger.json", "Catalog Service");
-    options.SwaggerEndpoint("/swagger/booking/swagger.json", "Booking Service");
-    options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin Service");
-});
+// ApiGateway Swagger UI (aggregated downstream Swagger docs)
+app.UseSwaggerForOcelotUI(
+    options =>
+    {
+        options.PathToSwaggerGenerator = "/swagger/docs";
+    },
+    uiOptions =>
+    {
+        uiOptions.RoutePrefix = "swagger";
+    });
 
 await app.UseOcelot();
+
 app.Run();
-
-

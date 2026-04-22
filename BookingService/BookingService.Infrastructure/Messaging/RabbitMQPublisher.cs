@@ -1,36 +1,47 @@
-﻿using RabbitMQ.Client;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
+using RabbitMQ.Client;
+using Microsoft.Extensions.Logging;
 
 namespace BookingService.Infrastructure.Messaging
 {
-    public class RabbitMQPublisher
+    public interface IBookingPublisher
     {
-        public void PublishBookingCreated(object message)
+        Task PublishEventAsync<T>(T @event, string routingKey);
+    }
+
+    public class RabbitMQPublisher : IBookingPublisher, IDisposable
+    {
+        private readonly IConnection _connection;
+        private readonly IModel _channel;
+        private const string ExchangeName = "hotel_booking_exchange";
+
+        public RabbitMQPublisher()
         {
-            var factory = new ConnectionFactory()
-            {
-                HostName = "localhost"
-            };
+            var factory = new ConnectionFactory { HostName = "localhost" };
+            _connection = factory.CreateConnection();
+            _channel = _connection.CreateModel();
+            
+            _channel.ExchangeDeclare(exchange: ExchangeName, type: ExchangeType.Topic, durable: true);
+        }
 
-            using var connection = factory.CreateConnection();
-            using var channel = connection.CreateModel();
-
-            channel.QueueDeclare(
-                queue: "booking_queue",
-                durable: false,
-                exclusive: false,
-                autoDelete: false);
-
-            var json = JsonSerializer.Serialize(message);
+        public Task PublishEventAsync<T>(T @event, string routingKey)
+        {
+            var json = JsonSerializer.Serialize(@event);
             var body = Encoding.UTF8.GetBytes(json);
 
-            channel.BasicPublish(
-                exchange: "",
-                routingKey: "booking_queue",
-                body: body);
+            // Publish message to the topic exchange
+            _channel.BasicPublish(exchange: ExchangeName, routingKey: routingKey, basicProperties: null, body: body);
+            
+            return Task.CompletedTask;
+        }
+
+        public void Dispose()
+        {
+            _channel?.Dispose();
+            _connection?.Dispose();
         }
     }
 }

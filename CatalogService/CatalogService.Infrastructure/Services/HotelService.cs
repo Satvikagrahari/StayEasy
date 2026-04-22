@@ -27,7 +27,8 @@ namespace CatalogService.Application.Services
                 Country = request.Country,
                 Address = request.Address,
                 Description = request.Description,
-                StarRating = request.StarRating
+                StarRating = request.StarRating,
+                IsActive = true
             };
 
             await _context.Hotels.AddAsync(hotel);
@@ -44,6 +45,7 @@ namespace CatalogService.Application.Services
         {
             var query = _context.Hotels
                 .Include(h => h.RoomTypes)
+                .Where(h => h.IsActive)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(roomType))
@@ -89,7 +91,8 @@ namespace CatalogService.Application.Services
 
         public async Task<Hotel> GetHotelByIdAsync(Guid id)
         {
-            var hotel = await _context.Hotels.FindAsync(id);
+            var hotel = await _context.Hotels
+                .FirstOrDefaultAsync(h => h.HotelId == id && h.IsActive);
 
             if (hotel == null)
                 throw new ApplicationException("Hotel not found");
@@ -111,6 +114,67 @@ namespace CatalogService.Application.Services
                 Name = room.Type, // or Name depending on your entity
                 PricePerNight = room.PricePerNight
             };
+        }
+
+        public async Task<bool> UpdateHotelAsync(Guid id, UpdateHotelRequest request)
+        {
+            var hotel = await _context.Hotels.FirstOrDefaultAsync(h => h.HotelId == id && h.IsActive);
+            if (hotel == null)
+                return false;
+
+            hotel.Name = request.Name;
+            hotel.City = request.City;
+            hotel.Country = request.Country;
+            hotel.Address = request.Address;
+            hotel.Description = request.Description;
+            hotel.StarRating = request.StarRating;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeactivateHotelAsync(Guid id)
+        {
+            var hotel = await _context.Hotels
+                .Include(h => h.RoomTypes)
+                .FirstOrDefaultAsync(h => h.HotelId == id && h.IsActive);
+
+            if (hotel == null)
+                return false;
+
+            hotel.IsActive = false;
+
+            foreach (var room in hotel.RoomTypes)
+            {
+                room.Status = "Inactive";
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateRoomTypeAsync(Guid roomTypeId, UpdateRoomTypeRequest request)
+        {
+            var room = await _context.RoomTypes
+                .Include(r => r.Hotel)
+                .FirstOrDefaultAsync(r => r.RoomTypeId == roomTypeId && r.Hotel.IsActive);
+
+            if (room == null)
+                return false;
+
+            room.Type = request.Type;
+            room.Description = request.Description;
+            room.MaxGuests = request.MaxGuests;
+            room.PricePerNight = request.PricePerNight;
+            room.TotalRooms = request.TotalRooms;
+
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                room.Status = request.Status;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

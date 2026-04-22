@@ -1,4 +1,5 @@
-﻿using BookingService.Application.DTOs.Request;
+using BookingService.Application.DTOs.Request;
+using BookingService.Application.IntegrationEvents;
 using BookingService.Application.Interfaces.Services;
 using BookingService.Domain.Entities;
 using BookingService.Infrastructure.Data;
@@ -15,10 +16,10 @@ namespace BookingService.Infrastructure.Services
     public class BookingService : IBookingService
     {
         private readonly BookingDbContext _context;
-        private readonly RabbitMQPublisher _publisher;
+        private readonly IBookingPublisher _publisher;
 
-        public BookingService(BookingDbContext context, RabbitMQPublisher publisher)
-        {
+        public BookingService(BookingDbContext context, IBookingPublisher publisher)
+        {   
             _context = context;
             _publisher = publisher;
         }
@@ -104,23 +105,33 @@ namespace BookingService.Infrastructure.Services
 
             booking.BookingItems = bookingItems;
 
-            _publisher.PublishBookingCreated(new
+            //_publisher.PublishBookingCreated(new
+            //{
+            //    booking.Id,
+            //    booking.UserId,
+            //    booking.TotalAmount,
+            //    Items = booking.BookingItems.Select(i => new
+            //    {
+            //        i.BookingItemId,
+            //        i.HotelId,
+            //        i.RoomTypeId,
+            //        i.CheckInDate,
+            //        i.CheckOutDate,
+            //        i.Nights,
+            //        i.Subtotal
+            //    })
+            //});
+
+            var bookingCreatedEvent = new BookingCreatedIntegrationEvent
             {
-                booking.Id,
-                booking.UserId,
-                booking.TotalAmount,
-                Items = booking.BookingItems.Select(i => new
-                {
-                    i.BookingItemId,
-                    i.HotelId,
-                    i.RoomTypeId,
-                    i.CheckInDate,
-                    i.CheckOutDate,
-                    i.Nights,
-                    i.PricePerNight,
-                    i.Subtotal
-                })
-            });
+                BookingId = booking.Id,
+                UserId = booking.UserId,
+                TotalAmount = booking.TotalAmount,
+                Status = booking.Status,
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            await _publisher.PublishEventAsync(bookingCreatedEvent, "booking.created");
 
             return booking.Id;
         }
@@ -146,6 +157,30 @@ namespace BookingService.Infrastructure.Services
                 return false;
 
             booking.Status = status;
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+        public async Task SimulatePaymentAsync(Guid bookingId, bool isSuccess)
+        {
+            var paymentEvent = new PaymentProcessedIntegrationEvent
+            {
+                BookingId = bookingId,
+                IsSuccess = isSuccess,
+                ProcessedAt = DateTime.UtcNow
+            };
+
+            await _publisher.PublishEventAsync(paymentEvent, "payment.processed");
+        }
+
+        public async Task<bool> CancelBookingAsync(Guid bookingId, Guid userId)
+        {
+            var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
+            
+            if (booking == null) return false;
+            if (booking.Status == "Cancelled") return true;
+
+            booking.Status = "Cancelled";
             await _context.SaveChangesAsync();
             return true;
         }

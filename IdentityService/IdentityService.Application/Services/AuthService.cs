@@ -1,4 +1,4 @@
-﻿using IdentityService.Application.DTOs.Request;
+using IdentityService.Application.DTOs.Request;
 using IdentityService.Application.DTOs.Response;
 using IdentityService.Application.Interfaces.Services;
 using IdentityService.Domain.Entities;
@@ -8,17 +8,24 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text;
+using Twilio;
+using Twilio.Rest.Api.V2010.Account;
+using Twilio.Types;
 
 public class AuthService : IAuthService
 {
     private readonly AppDbContext _context;
     private readonly IConfiguration _config;
+    private readonly IOtpService _otpService;
 
-    public AuthService(AppDbContext context, IConfiguration config)
+    public AuthService(AppDbContext context, IConfiguration config, IOtpService otpService)
     {
         _context = context;
         _config = config;
+        _otpService = otpService;
     }
 
     public async Task SignupAsync(SignupRequest request)
@@ -39,7 +46,8 @@ public class AuthService : IAuthService
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             PhoneNumber = request.PhoneNumber,
             Role = "Guest",
-            IsVerified = true
+            IsVerified = true,
+            IsActive = true
         };
 
         _context.Users.Add(user);
@@ -63,38 +71,9 @@ public class AuthService : IAuthService
             || msg.Contains("duplicate", StringComparison.OrdinalIgnoreCase);
     }
 
-
-    //public async Task SignupAsync(SignupRequest request)
-    //{
-    //    // Normalize email (important for consistency)
-    //    var email = request.Email.Trim().ToLower();
-
-    //    // Check existing user (optimized query)
-    //    var userExists = await _context.Users
-    //        .AsNoTracking()
-    //        .AnyAsync(x => x.Email == email);
-
-    //    if (userExists)
-    //        throw new ApplicationException("User already exists");
-
-    //    // Create user
-    //    var user = new User
-    //    {
-    //        Id = Guid.NewGuid(),
-    //        Email = email,
-    //        PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-    //        PhoneNumber = request.PhoneNumber,
-    //        Role = "Guest",
-    //        IsVerified = true
-    //    };
-
-    //    await _context.Users.AddAsync(user);
-    //    await _context.SaveChangesAsync();
-    //}
-
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
-        var email = request.Email.Trim().ToLower();
+        var email = request.Email.Trim().ToLowerInvariant();
 
         // Fetch user
         var user = await _context.Users
@@ -103,25 +82,193 @@ public class AuthService : IAuthService
         if (user == null)
             throw new ApplicationException("Invalid email or password");
 
+        if (!user.IsActive)
+            throw new ApplicationException("User is deactivated");
+
         // Verify password
         var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
         if (!isPasswordValid)
             throw new ApplicationException("Invalid email or password");
 
-        // Generate JWT
+        // Generate JWT + refresh token
         var token = GenerateJwtToken(user);
+        var refreshToken = GenerateRefreshToken();
+
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        await _context.SaveChangesAsync();
 
         return new LoginResponse
         {
             Token = token,
+            RefreshToken = refreshToken,
             Email = user.Email,
             Role = user.Role
         };
     }
 
+    public async Task<LoginResponse> RefreshAsync(RefreshTokenRequest request)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(x =>
+            x.RefreshToken == request.RefreshToken &&
+            x.RefreshTokenExpiryTime != null &&
+            x.RefreshTokenExpiryTime > DateTime.UtcNow);
+
+        if (user == null)
+            throw new ApplicationException("Invalid or expired refresh token");
+
+        if (!user.IsActive)
+            throw new ApplicationException("User is deactivated");
+
+        var jwt = GenerateJwtToken(user);
+        var newRefreshToken = GenerateRefreshToken();
+
+        user.RefreshToken = newRefreshToken;
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        await _context.SaveChangesAsync();
+
+        return new LoginResponse
+        {
+            Token = jwt,
+            RefreshToken = newRefreshToken,
+            Email = user.Email,
+            Role = user.Role
+        };
+    }
+
+    public async Task LogoutAsync(Guid userId)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        if (user == null)
+            return;
+
+        user.RefreshToken = null;
+        user.RefreshTokenExpiryTime = null;
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<UserProfileResponse> GetProfileAsync(Guid userId)
+    {
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == userId);
+
+        if (user == null)
+            throw new ApplicationException("User not found");
+
+        return new UserProfileResponse
+        {
+            Id = user.Id,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            Role = user.Role,
+            IsVerified = user.IsVerified,
+            IsActive = user.IsActive
+        };
+    }
+
+    public async Task UpdateProfileAsync(Guid userId, UpdateProfileRequest request)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
+        if (user == null)
+            throw new ApplicationException("User not found");
+
+        if (!string.IsNullOrWhiteSpace(request.Email))
+        {
+            var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+
+            var emailExists = await _context.Users
+                .AsNoTracking()
+                .AnyAsync(x => x.Email == normalizedEmail && x.Id != userId);
+
+            if (emailExists)
+                throw new ApplicationException("Email already in use");
+
+            user.Email = normalizedEmail;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            user.PhoneNumber = request.PhoneNumber.Trim();
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<UserProfileResponse>> GetAllUsersAsync()
+    {
+        return await _context.Users
+            .AsNoTracking()
+            .Select(user => new UserProfileResponse
+            {
+                Id = user.Id,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Role = user.Role,
+                IsVerified = user.IsVerified,
+                IsActive = user.IsActive
+            })
+            .ToListAsync();
+    }
+
+    public async Task UpdateUserStatusAsync(Guid userId, bool isActive)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
+        if (user == null)
+            throw new ApplicationException("User not found");
+
+        user.IsActive = isActive;
+
+        if (!isActive)
+        {
+            // Revoke refresh token when deactivating
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteUserAsync(Guid userId)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        if (user == null)
+            throw new ApplicationException("User not found");
+
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task SendOtpAsync(SendOtpRequest request)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
+        if (user == null) throw new ApplicationException("User not found for this phone number");
+        
+        await _otpService.SendOtpAsync(request.PhoneNumber, request.Channel);
+    }
+
+    public async Task VerifyOtpAsync(VerifyOtpRequest request)
+    {
+        var isValid = await _otpService.VerifyOtpAsync(request.PhoneNumber, request.Code);
+        if (!isValid) throw new ApplicationException("Invalid or expired OTP");
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
+        if (user != null)
+        {
+            user.IsVerified = true;
+            await _context.SaveChangesAsync();
+        }
+    }
+
     private string GenerateJwtToken(User user)
     {
+        var jwtKey = _config["Jwt:Key"] ?? throw new ApplicationException("Jwt:Key is missing");
+        var issuer = _config["Jwt:Issuer"] ?? throw new ApplicationException("Jwt:Issuer is missing");
+        var audience = _config["Jwt:Audience"] ?? throw new ApplicationException("Jwt:Audience is missing");
+
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // VERY IMPORTANT
@@ -129,15 +276,12 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Role, user.Role)
         };
 
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_config["Jwt:Key"])
-        );
-
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: _config["Jwt:Issuer"],
-            audience: _config["Jwt:Audience"],
+            issuer: issuer,
+            audience: audience,
             claims: claims,
             expires: DateTime.UtcNow.AddHours(1), // use UTC
             signingCredentials: creds
@@ -145,54 +289,11 @@ public class AuthService : IAuthService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    private static string GenerateRefreshToken()
+    {
+        var bytes = new byte[64];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToBase64String(bytes);
+    }
 }
-//public async Task GenerateOtpAsync(string phoneNumber)
-//    {
-//        var code = new Random().Next(100000, 999999).ToString();
-
-//        var otp = new Otp
-//        {
-//            Id = Guid.NewGuid(),
-//            PhoneNumber = phoneNumber,
-//            Code = code,
-//            ExpiryTime = DateTime.UtcNow.AddMinutes(5)
-//        };
-
-//        await _context.Otps.AddAsync(otp);
-//        await _context.SaveChangesAsync();
-
-//        var accountSid = _configuration["Twilio:AccountSid"];
-//        var authToken = _configuration["Twilio:AuthToken"];
-//        var fromPhone = _configuration["Twilio:FromPhone"];
-
-//        if (!string.IsNullOrEmpty(accountSid) && !string.IsNullOrEmpty(authToken) && !string.IsNullOrEmpty(fromPhone))
-//        {
-//            TwilioClient.Init(accountSid, authToken);
-//            MessageResource.Create(
-//                to: new PhoneNumber(phoneNumber),
-//                from: new PhoneNumber(fromPhone),
-//                body: $"Your OTP is: {code} (valid 5 minutes)");
-//        }
-//    }
-
-//    public async Task<bool> VerifyOtpAsync(string phoneNumber, string code)
-//    {
-//        var otp = await _context.Otps
-//            .Where(o => o.PhoneNumber == phoneNumber && o.Code == code)
-//            .OrderByDescending(o => o.ExpiryTime)
-//            .FirstOrDefaultAsync();
-
-//        if (otp == null || otp.ExpiryTime < DateTime.UtcNow)
-//            return false;
-
-//        _context.Otps.Remove(otp);
-
-//        var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
-//        if (user != null)
-//        {
-//            user.IsVerified = true;
-//        }
-
-//        await _context.SaveChangesAsync();
-//        return true;
-//    }

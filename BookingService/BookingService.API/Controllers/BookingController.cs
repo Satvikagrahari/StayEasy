@@ -1,4 +1,4 @@
-﻿using BookingService.Application.DTOs.Request;
+using BookingService.Application.DTOs.Request;
 using BookingService.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -76,6 +76,26 @@ namespace BookingService.API.Controllers
                 return NotFound();
 
             return Ok(new { message = $"Booking status updated to {status}" });
+        }
+
+        [HttpPost("{bookingId}/simulate-payment")]
+        public async Task<IActionResult> SimulatePayment(Guid bookingId, [FromQuery] bool isSuccess = true)
+        {
+            await _bookingService.SimulatePaymentAsync(bookingId, isSuccess);
+            return Ok(new { message = $"Payment simulated for booking {bookingId}. Success: {isSuccess}" });
+        }
+
+        [Authorize]
+        [HttpDelete("{id}/cancel")]
+        public async Task<IActionResult> CancelBooking(Guid id)
+        {
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var success = await _bookingService.CancelBookingAsync(id, userId);
+            if (!success)
+                return NotFound(new { message = "Booking not found or not owned by user." });
+
+            return Ok(new { message = "Booking cancelled successfully." });
         }
     }
 }

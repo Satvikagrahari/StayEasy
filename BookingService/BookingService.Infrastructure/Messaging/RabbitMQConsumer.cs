@@ -1,36 +1,44 @@
-using BookingService.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using BookingService.Application.IntegrationEvents;
+using BookingService.Infrastructure.Data;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace BookingService.Infrastructure.Messaging
 {
-    public class RabbitMQConsumer : IDisposable
+    public class RabbitMQConsumerService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
+        private readonly ILogger<RabbitMQConsumerService> _logger;
+        private IConnection _connection;
+        private IModel _channel;
 
-        public RabbitMQConsumer(IServiceProvider serviceProvider)
+        private const string ExchangeName = "hotel_booking_exchange";
+        private const string QueueName = "booking_service_queue";
+        private const string RoutingKey = "payment.processed";
+
+        public RabbitMQConsumerService(IServiceProvider serviceProvider, ILogger<RabbitMQConsumerService> logger)
         {
             _serviceProvider = serviceProvider;
-
-            var factory = new ConnectionFactory() { HostName = "localhost" };
+            _logger = logger;
+            
+            var factory = new ConnectionFactory { HostName = "localhost", DispatchConsumersAsync = true };
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
-
-            _channel.QueueDeclare(
-                queue: "booking_queue",
-                durable: false,
-                exclusive: false,
-                autoDelete: false);
+            
+            _channel.ExchangeDeclare(exchange: ExchangeName, type: ExchangeType.Topic, durable: true);
+            _channel.QueueDeclare(queue: QueueName, durable: true, exclusive: false, autoDelete: false);
+            _channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: RoutingKey);
         }
 
-        public void StartListening()
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var consumer = new AsyncEventingBasicConsumer(_channel);
 
@@ -38,46 +46,60 @@ namespace BookingService.Infrastructure.Messaging
             {
                 try
                 {
-                    var body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
-                    var bookingData = JsonSerializer.Deserialize<JsonElement>(message);
-
-                    // Extract booking ID
-                    if (bookingData.TryGetProperty("Id", out var idElement))
+                    var message = Encoding.UTF8.GetString(ea.Body.ToArray());
+                    var paymentEvent = JsonSerializer.Deserialize<PaymentProcessedIntegrationEvent>(message, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    
+                    if (paymentEvent != null && paymentEvent.BookingId != Guid.Empty)
                     {
-                        var bookingId = Guid.Parse(idElement.GetString());
+                        using var scope = _serviceProvider.CreateScope();
+                        var db = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
+                        var booking = await db.Bookings.FindAsync(new object[] { paymentEvent.BookingId }, stoppingToken);
 
-                        // Create a new scope for database access
-                        using (var scope = _serviceProvider.CreateScope())
+                        if (booking != null)
                         {
-                            var context = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
-                            var booking = await context.Bookings.FindAsync(bookingId);
-                            if (booking != null)
+                            if (paymentEvent.IsSuccess)
                             {
                                 booking.Status = "Confirmed";
-                                await context.SaveChangesAsync();
-                                Console.WriteLine($"✓ Booking {bookingId} confirmed");
+                                _logger.LogInformation("✓ Payment Successful. Booking {BookingId} is Confirmed.", paymentEvent.BookingId);
                             }
+                            else
+                            {
+                                booking.Status = "Failed";
+                                _logger.LogInformation("❌ Payment Failed. Booking {BookingId} is Failed.", paymentEvent.BookingId);
+                            }
+                            
+                            await db.SaveChangesAsync(stoppingToken);
+                            _channel.BasicAck(ea.DeliveryTag, false);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Booking {BookingId} not found. Dropping message.", paymentEvent.BookingId);
+                            _channel.BasicNack(ea.DeliveryTag, false, false);
                         }
                     }
-
-                    _channel.BasicAck(ea.DeliveryTag, false);
+                    else
+                    {
+                        _logger.LogWarning("Received invalid payment message payload.");
+                        _channel.BasicNack(ea.DeliveryTag, false, false);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"✗ Error processing message: {ex.Message}");
+                    _logger.LogError(ex, "Error processing payment message");
                     _channel.BasicNack(ea.DeliveryTag, false, true);
                 }
             };
 
-            _channel.BasicConsume(queue: "booking_queue", autoAck: false, consumer: consumer);
-            Console.WriteLine("Listening for booking messages...");
+            _channel.BasicConsume(queue: QueueName, autoAck: false, consumer: consumer);
+            
+            return Task.CompletedTask;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
-            _channel?.Close();
-            _connection?.Close();
+            _channel?.Dispose();
+            _connection?.Dispose();
+            base.Dispose();
         }
     }
 }

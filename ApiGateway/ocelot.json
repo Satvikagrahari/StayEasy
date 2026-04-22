@@ -5,6 +5,65 @@
 //    }
 //}
 
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/api/auth/{everything}",
+//      "DownstreamScheme": "https",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 7006
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/gateway/auth/{everything}",
+//      "UpstreamHttpMethod": [ "GET", "POST" ]
+//    },
+//    {
+//      "DownstreamPathTemplate": "/api/hotels/{everything}",
+//      "DownstreamScheme": "https",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 7092
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/gateway/catalog/{everything}",
+//      "UpstreamHttpMethod": [ "GET", "POST" ]
+//    },
+//    {
+//      //"https": null, //localhost:7071/api/Booking
+
+//      "DownstreamPathTemplate": "/api/booking",
+//      "DownstreamScheme": "https",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 7071
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/gateway/booking",
+//      "UpstreamHttpMethod": [ "GET", "POST" ]
+//    },
+//    {
+//      "DownstreamPathTemplate": "/api/admin/{everything}",
+//      "DownstreamScheme": "https",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 7070
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/gateway/admin/{everything}",
+//      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+//    }
+//  ],
+//  "GlobalConfiguration": {
+//    "BaseUrl": "https://localhost:7067"
+//  }
+//}
+
+
 {
   "Routes": [
     {
@@ -17,7 +76,34 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/auth/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST" ]
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "identity"
+    },
+    {
+      "DownstreamPathTemplate": "/api/users/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7006
+        }
+      ],
+      "UpstreamPathTemplate": "/gateway/users/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "identity"
+    },
+    {
+      "DownstreamPathTemplate": "/api/admin/users/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7006
+        }
+      ],
+      "UpstreamPathTemplate": "/gateway/admin/users/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "identity"
     },
     {
       "DownstreamPathTemplate": "/api/hotels/{everything}",
@@ -29,12 +115,11 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/catalog/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST" ]
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "catalog"
     },
     {
-      //"https": null, //localhost:7071/api/Booking
-
-      "DownstreamPathTemplate": "/api/booking",
+      "DownstreamPathTemplate": "/api/booking/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -42,8 +127,22 @@
           "Port": 7071
         }
       ],
-      "UpstreamPathTemplate": "/gateway/booking",
-      "UpstreamHttpMethod": [ "GET", "POST" ]
+      "UpstreamPathTemplate": "/gateway/booking/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "booking"
+    },
+    {
+      "DownstreamPathTemplate": "/api/cart/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7071
+        }
+      ],
+      "UpstreamPathTemplate": "/gateway/cart/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "booking"
     },
     {
       "DownstreamPathTemplate": "/api/admin/{everything}",
@@ -55,7 +154,54 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/admin/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "admin"
+    }
+  ],
+  "SwaggerEndPoints": [
+    {
+      "Key": "identity",
+      "TransformByOcelotConfig": true,
+      "Config": [
+        {
+          "Name": "Identity Service",
+          "Version": "v1",
+          "Url": "https://localhost:7006/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "catalog",
+      "TransformByOcelotConfig": true,
+      "Config": [
+        {
+          "Name": "Catalog Service",
+          "Version": "v1",
+          "Url": "https://localhost:7092/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "booking",
+      "TransformByOcelotConfig": true,
+      "Config": [
+        {
+          "Name": "Booking Service",
+          "Version": "v1",
+          "Url": "https://localhost:7071/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "admin",
+      "TransformByOcelotConfig": true,
+      "Config": [
+        {
+          "Name": "Admin Service",
+          "Version": "v1",
+          "Url": "https://localhost:7070/swagger/v1/swagger.json"
+        }
+      ]
     }
   ],
   "GlobalConfiguration": {

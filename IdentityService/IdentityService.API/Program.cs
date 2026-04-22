@@ -4,7 +4,10 @@ using IdentityService.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
+using IdentityService.Application.Services;
+using Twilio;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // DI
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IOtpService, TwilioOtpService>();
+
+// Twilio Setup
+TwilioClient.Init(
+    builder.Configuration["Twilio:AccountSid"],
+    builder.Configuration["Twilio:AuthToken"]
+);
 
 // JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -36,7 +46,7 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(jwtSettings["Key"])
-        ) 
+        )
     };
 });
 
@@ -44,27 +54,65 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Identity API", Version = "v1" });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter: Bearer <access_token>"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    if (!context.Users.Any(u => u.Email == "admin@stayeasy.com"))
+    var admin = context.Users.FirstOrDefault(u => u.Email == "admin@stayeasy.com");
+    if (admin == null)
     {
-        var admin = new User
+        admin = new User
         {
             Id = Guid.NewGuid(),
             Email = "admin@stayeasy.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
             PhoneNumber = "9125219430",
-            Role = "Admin"
+            Role = "Admin",
+            IsActive = true,
+            IsVerified = true
         };
 
         context.Users.Add(admin);
-        context.SaveChanges();
     }
+    else
+    {
+        admin.Role = "Admin";
+        admin.IsActive = true;
+        admin.IsVerified = true;
+    }
+
+    context.SaveChanges();
 }
 
 app.UseMiddleware<ExceptionMiddleware>();

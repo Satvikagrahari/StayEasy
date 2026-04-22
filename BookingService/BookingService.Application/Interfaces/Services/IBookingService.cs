@@ -1,4 +1,4 @@
-﻿using BookingService.Application.DTOs.Request;
+using BookingService.Application.DTOs.Request;
 using BookingService.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -15,5 +15,7 @@ namespace BookingService.Application.Interfaces.Services
         Task<List<Booking>> GetPendingBookingsAsync();
         Task<List<Booking>> GetConfirmedBookingsAsync();
         Task<bool> UpdateBookingStatusAsync(Guid bookingId, string status);
+        Task SimulatePaymentAsync(Guid bookingId, bool isSuccess);
+        Task<bool> CancelBookingAsync(Guid bookingId, Guid userId);
     }
 }
