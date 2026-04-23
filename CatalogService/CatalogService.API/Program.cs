@@ -86,6 +86,7 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<IHotelService, HotelService>();
+builder.Services.AddHostedService<CatalogService.Infrastructure.Messaging.RabbitMQInventoryConsumer>();
 
 builder.Services.AddControllers();
 
@@ -95,6 +96,8 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 

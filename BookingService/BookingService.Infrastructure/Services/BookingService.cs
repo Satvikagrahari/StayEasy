@@ -128,7 +128,12 @@ namespace BookingService.Infrastructure.Services
                 UserId = booking.UserId,
                 TotalAmount = booking.TotalAmount,
                 Status = booking.Status,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                BookingItems = bookingItems.Select(i => new BookingItemDto
+                {
+                    RoomTypeId = i.RoomTypeId,
+                    Nights = i.Nights
+                }).ToList()
             };
             
             await _publisher.PublishEventAsync(bookingCreatedEvent, "booking.created");
@@ -175,13 +180,28 @@ namespace BookingService.Infrastructure.Services
 
         public async Task<bool> CancelBookingAsync(Guid bookingId, Guid userId)
         {
-            var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
+            var booking = await _context.Bookings
+                .Include(b => b.BookingItems)
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
             
             if (booking == null) return false;
             if (booking.Status == "Cancelled") return true;
 
             booking.Status = "Cancelled";
             await _context.SaveChangesAsync();
+
+            var cancelEvent = new BookingCancelledIntegrationEvent
+            {
+                BookingId = booking.Id,
+                BookingItems = booking.BookingItems.Select(i => new BookingItemDto
+                {
+                    RoomTypeId = i.RoomTypeId,
+                    Nights = i.Nights
+                }).ToList()
+            };
+            
+            await _publisher.PublishEventAsync(cancelEvent, "booking.cancelled");
+
             return true;
         }
     }

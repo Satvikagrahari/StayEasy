@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -17,6 +17,8 @@ namespace CatalogService.Domain.Entities
         public decimal PricePerNight { get; set; }
 
         public int TotalRooms { get; set; }
+
+        public int AvailableRooms { get; set; }
 
         public string Status { get; set; } = "Active";
 

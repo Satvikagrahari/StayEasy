@@ -18,6 +18,8 @@ namespace CatalogService.Application.DTOs.Request
         [Required]
         public int TotalRooms { get; set; }
 
+        public int? AvailableRooms { get; set; }
+
         public string? Status { get; set; }
     }
 }

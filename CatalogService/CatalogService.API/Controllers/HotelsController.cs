@@ -1,4 +1,4 @@
-﻿using CatalogService.Application.DTOs.Request;
+using CatalogService.Application.DTOs.Request;
 using CatalogService.Application.DTOs.Response;
 using CatalogService.Application.Interfaces.Services;
 using CatalogService.Domain.Entities;
@@ -114,7 +114,10 @@ namespace CatalogService.API.Controllers
             return Ok(new
             {
                 room.RoomTypeId,
-                room.PricePerNight
+                room.Name,
+                room.PricePerNight,
+                room.TotalRooms,
+                room.AvailableRooms
             });
         }
     }

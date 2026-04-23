@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,6 +11,8 @@ namespace CatalogService.Application.DTOs.Response
         public string Name { get; set; }
         //public string City { get; set; }
         public decimal PricePerNight { get; set; }
+        public int TotalRooms { get; set; }
+        public int AvailableRooms { get; set; }
 
         //public List<RoomTypeDto> RoomTypes { get; set; }
     }

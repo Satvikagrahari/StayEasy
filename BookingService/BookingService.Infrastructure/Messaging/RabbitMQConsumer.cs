@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using BookingService.Application.IntegrationEvents;
+using BookingService.Application.Interfaces.Services;
 using BookingService.Infrastructure.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -60,15 +61,20 @@ namespace BookingService.Infrastructure.Messaging
                             if (paymentEvent.IsSuccess)
                             {
                                 booking.Status = "Confirmed";
+                                await db.SaveChangesAsync(stoppingToken);
                                 _logger.LogInformation("✓ Payment Successful. Booking {BookingId} is Confirmed.", paymentEvent.BookingId);
+
+                                // ── Send booking confirmation email ──────────────────
+                                await SendConfirmationEmailAsync(scope, booking.UserId, booking.Id, booking.TotalAmount, booking.BookingDate);
+                                // ────────────────────────────────────────────────────
                             }
                             else
                             {
                                 booking.Status = "Failed";
+                                await db.SaveChangesAsync(stoppingToken);
                                 _logger.LogInformation("❌ Payment Failed. Booking {BookingId} is Failed.", paymentEvent.BookingId);
                             }
                             
-                            await db.SaveChangesAsync(stoppingToken);
                             _channel.BasicAck(ea.DeliveryTag, false);
                         }
                         else
@@ -93,6 +99,35 @@ namespace BookingService.Infrastructure.Messaging
             _channel.BasicConsume(queue: QueueName, autoAck: false, consumer: consumer);
             
             return Task.CompletedTask;
+        }
+
+        private async Task SendConfirmationEmailAsync(
+            IServiceScope scope,
+            Guid userId,
+            Guid bookingId,
+            decimal totalAmount,
+            DateTime bookingDate)
+        {
+            try
+            {
+                var identityClient = scope.ServiceProvider.GetRequiredService<IIdentityClient>();
+                var emailService   = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+                var userEmail = await identityClient.GetUserEmailAsync(userId);
+
+                if (string.IsNullOrWhiteSpace(userEmail))
+                {
+                    _logger.LogWarning("Could not resolve email for UserId {UserId}. Skipping confirmation email.", userId);
+                    return;
+                }
+
+                await emailService.SendBookingConfirmationAsync(userEmail, bookingId, totalAmount, bookingDate);
+            }
+            catch (Exception ex)
+            {
+                // Email failure must never affect booking status — log and continue
+                _logger.LogError(ex, "Unexpected error while sending confirmation email for Booking {BookingId}.", bookingId);
+            }
         }
 
         public override void Dispose()

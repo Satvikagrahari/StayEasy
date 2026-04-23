@@ -1,4 +1,4 @@
-﻿using CatalogService.Application.DTOs.Request;
+using CatalogService.Application.DTOs.Request;
 using CatalogService.Application.DTOs.Response;
 using CatalogService.Application.Interfaces.Services;
 using CatalogService.Domain.Entities;
@@ -66,7 +66,9 @@ namespace CatalogService.Application.Services
                 {
                     RoomTypeId = r.RoomTypeId,
                     Name = r.Type,
-                    PricePerNight = r.PricePerNight
+                    PricePerNight = r.PricePerNight,
+                    TotalRooms = r.TotalRooms,
+                    AvailableRooms = r.AvailableRooms
                 }).ToList()
             }).ToList();
         }
@@ -81,7 +83,8 @@ namespace CatalogService.Application.Services
                 Description = request.Description,
                 MaxGuests = request.MaxGuests,
                 PricePerNight = request.PricePerNight,
-                TotalRooms = request.TotalRooms
+                TotalRooms = request.TotalRooms,
+                AvailableRooms = request.AvailableRooms ?? request.TotalRooms
             };
 
             await _context.RoomTypes.AddAsync(room);
@@ -112,7 +115,9 @@ namespace CatalogService.Application.Services
             {
                 RoomTypeId = room.RoomTypeId,
                 Name = room.Type, // or Name depending on your entity
-                PricePerNight = room.PricePerNight
+                PricePerNight = room.PricePerNight,
+                TotalRooms = room.TotalRooms,
+                AvailableRooms = room.AvailableRooms
             };
         }
 
@@ -167,6 +172,11 @@ namespace CatalogService.Application.Services
             room.MaxGuests = request.MaxGuests;
             room.PricePerNight = request.PricePerNight;
             room.TotalRooms = request.TotalRooms;
+            
+            if (request.AvailableRooms.HasValue)
+            {
+                room.AvailableRooms = request.AvailableRooms.Value;
+            }
 
             if (!string.IsNullOrWhiteSpace(request.Status))
             {

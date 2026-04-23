@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -26,5 +26,7 @@ namespace CatalogService.Application.DTOs.Request
 
         [Required]
         public int TotalRooms { get; set; }
+
+        public int? AvailableRooms { get; set; }
     }
 }
