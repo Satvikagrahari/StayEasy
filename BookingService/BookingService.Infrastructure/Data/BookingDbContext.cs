@@ -1,4 +1,4 @@
-﻿using BookingService.Domain.Entities;
+using BookingService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -30,6 +30,10 @@ namespace BookingService.Infrastructure.Data
             .HasMany(b => b.BookingItems)
             .WithOne(bi => bi.Booking)
             .HasForeignKey(bi => bi.BookingId);
+
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.Status)
+                .HasConversion<string>();
         }
     }
 

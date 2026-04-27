@@ -1,5 +1,6 @@
 using BookingService.Application.DTOs.Request;
 using BookingService.Application.Interfaces.Services;
+using BookingService.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -69,7 +70,7 @@ namespace BookingService.API.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPut("{bookingId}/status")]
-        public async Task<IActionResult> UpdateBookingStatus(Guid bookingId, [FromQuery] string status)
+        public async Task<IActionResult> UpdateBookingStatus(Guid bookingId, [FromQuery] BookingStatus status)
         {
             var success = await _bookingService.UpdateBookingStatusAsync(bookingId, status);
             if (!success)
@@ -96,6 +97,37 @@ namespace BookingService.API.Controllers
                 return NotFound(new { message = "Booking not found or not owned by user." });
 
             return Ok(new { message = "Booking cancelled successfully." });
+        }
+
+        [Authorize]
+        [HttpPost("{id}/request-refund")]
+        public async Task<IActionResult> RequestRefund(Guid id)
+        {
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            try
+            {
+                var success = await _bookingService.RequestRefundAsync(id, userId);
+                if (!success)
+                    return BadRequest(new { message = "Refund request failed. Ensure booking is cancelled." });
+
+                return Ok(new { message = "Refund requested successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("{id}/approve-refund")]
+        public async Task<IActionResult> ApproveRefund(Guid id)
+        {
+            var success = await _bookingService.ApproveRefundAsync(id);
+            if (!success)
+                return NotFound(new { message = "Booking not found or not in refund requested status." });
+
+            return Ok(new { message = "Refund approved and processed." });
         }
     }
 }

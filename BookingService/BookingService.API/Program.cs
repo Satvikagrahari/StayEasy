@@ -1,5 +1,6 @@
 using BookingService.Application.Interfaces.Services;
 using BookingService.Infrastructure.Data;
+using System.Text.Json.Serialization;
 using BookingService.Infrastructure.Messaging;
 using BookingService.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -51,12 +52,18 @@ builder.Services.AddAuthentication(options =>
             Encoding.UTF8.GetBytes(jwtSettings["Key"])
         )
     };
+   
 });
 
 builder.Services.AddAuthorization();
 
 // ================= Controllers =================
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // ================= Swagger/OpenAPI =================
 builder.Services.AddEndpointsApiExplorer();

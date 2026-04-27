@@ -1,4 +1,4 @@
-﻿using AdminService.Application.DTOs;
+using AdminService.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
@@ -23,20 +23,6 @@ namespace AdminService.API.Controller
         public AdminController(HttpClient httpClient)
         {
             _httpClient = httpClient;
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpPost("hotels")]
-        public async Task<IActionResult> CreateHotel([FromBody] CreateHotelRequest request)
-        {
-            using var downstreamRequest = CreateAuthorizedRequest(
-                HttpMethod.Post,
-                $"{CatalogBaseUrl}/api/hotels");
-
-            downstreamRequest.Content = JsonContent.Create(request);
-
-            var response = await _httpClient.SendAsync(downstreamRequest);
-            return StatusCode((int)response.StatusCode);
         }
 
         [Authorize(Roles = "Admin")]
@@ -135,18 +121,6 @@ namespace AdminService.API.Controller
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("bookings/{id:guid}/approve-refund")]
-        public async Task<IActionResult> ApproveRefund(Guid id)
-        {
-            using var downstreamRequest = CreateAuthorizedRequest(
-                HttpMethod.Put,
-                $"{BookingBaseUrl}/api/booking/{id}/status?status={Uri.EscapeDataString("RefundApproved")}");
-
-            var response = await _httpClient.SendAsync(downstreamRequest);
-            return StatusCode((int)response.StatusCode);
-        }
-
-        [Authorize(Roles = "Admin")]
         [HttpGet("reports/occupancy")]
         public async Task<IActionResult> GetOccupancyReport([FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null)
         {
@@ -160,15 +134,17 @@ namespace AdminService.API.Controller
 
             var bookings = await FetchBookingsAsync();
 
-            var confirmed = bookings.Where(x =>
-                x.Status.Equals("Confirmed", StringComparison.OrdinalIgnoreCase) &&
-                x.CheckIn > DateTime.MinValue &&
-                x.CheckOut > x.CheckIn);
+            // Flatten: one occupancy span per BookingItem (each item has its own hotel/room + dates)
+            var confirmedItems = bookings
+                .Where(x => x.Status.Equals("Confirmed", StringComparison.OrdinalIgnoreCase))
+                .SelectMany(x => x.BookingItems)
+                .Where(i => i.CheckInDate > DateTime.MinValue && i.CheckOutDate > i.CheckInDate)
+                .ToList();
 
             var report = new List<object>();
             for (var date = from; date <= to; date = date.AddDays(1))
             {
-                var occupied = confirmed.Count(b => b.CheckIn.Date <= date && b.CheckOut.Date > date);
+                var occupied = confirmedItems.Count(i => i.CheckInDate.Date <= date && i.CheckOutDate.Date > date);
                 report.Add(new
                 {
                     date = date.ToString("yyyy-MM-dd"),
@@ -240,6 +216,18 @@ namespace AdminService.API.Controller
                 .ToList();
 
             return Ok(cancellations);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("bookings/{id:guid}/refund")]
+        public async Task<IActionResult> ApproveRefund(Guid id)
+        {
+            using var downstreamRequest = CreateAuthorizedRequest(
+                HttpMethod.Post,
+                $"{BookingBaseUrl}/api/booking/{id}/approve-refund");
+
+            var response = await _httpClient.SendAsync(downstreamRequest);
+            return StatusCode((int)response.StatusCode);
         }
 
         private HttpRequestMessage CreateAuthorizedRequest(HttpMethod method, string url)

@@ -9,6 +9,7 @@ using System.Text;
 using IdentityService.Application.Services;
 using Serilog;
 using Twilio;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,24 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(jwtSettings["Key"])
         )
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+            var userIdClaim = context.Principal?.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        
+            if (Guid.TryParse(userIdClaim, out var userId))
+            {
+                var user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+                if (user == null || !user.IsActive || string.IsNullOrEmpty(user.RefreshToken))
+                {
+                    context.Fail("Unauthorized. User is logged out or inactive.");
+                }
+            }
+        }
     };
 });
 

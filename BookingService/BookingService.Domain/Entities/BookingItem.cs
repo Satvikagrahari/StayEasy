@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace BookingService.Domain.Entities
 {
@@ -24,6 +25,7 @@ namespace BookingService.Domain.Entities
 
         public decimal Subtotal { get; set; }
 
+        [JsonIgnore]
         public Booking Booking { get; set; }
     }
 }

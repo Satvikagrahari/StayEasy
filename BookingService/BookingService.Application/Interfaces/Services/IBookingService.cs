@@ -14,8 +14,10 @@ namespace BookingService.Application.Interfaces.Services
         Task<Guid> CheckoutAsync(Guid userId);
         Task<List<Booking>> GetPendingBookingsAsync();
         Task<List<Booking>> GetConfirmedBookingsAsync();
-        Task<bool> UpdateBookingStatusAsync(Guid bookingId, string status);
+        Task<bool> UpdateBookingStatusAsync(Guid bookingId, BookingStatus status);
         Task SimulatePaymentAsync(Guid bookingId, bool isSuccess);
         Task<bool> CancelBookingAsync(Guid bookingId, Guid userId);
+        Task<bool> RequestRefundAsync(Guid bookingId, Guid userId);
+        Task<bool> ApproveRefundAsync(Guid bookingId);
     }
 }

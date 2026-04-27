@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BookingService.Application.IntegrationEvents;
+using BookingService.Domain.Entities;
 using BookingService.Infrastructure.Data;
 using BookingService.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
@@ -53,7 +54,7 @@ namespace BookingService.Infrastructure.BackgroundServices
 
             var bookingsToComplete = await db.Bookings
                 .Include(b => b.BookingItems)
-                .Where(b => b.Status == "Confirmed" && b.CheckOut < now)
+                .Where(b => b.Status == BookingStatus.Confirmed && b.BookingItems.Any() && b.BookingItems.Max(i => i.CheckOutDate) < now)
                 .ToListAsync(stoppingToken);
 
             if (!bookingsToComplete.Any())
@@ -63,7 +64,7 @@ namespace BookingService.Infrastructure.BackgroundServices
 
             foreach (var booking in bookingsToComplete)
             {
-                booking.Status = "Completed";
+                booking.Status = BookingStatus.Completed;
 
                 var completedEvent = new BookingCompletedIntegrationEvent
                 {

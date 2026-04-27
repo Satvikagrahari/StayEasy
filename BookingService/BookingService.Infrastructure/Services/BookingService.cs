@@ -53,6 +53,7 @@ namespace BookingService.Infrastructure.Services
         public async Task<List<Booking>> GetUserBookingsAsync(Guid userId)
         {
             return await _context.Bookings
+                .Include(b => b.BookingItems)
                 .Where(x => x.UserId == userId)
                 .ToListAsync();
         }
@@ -74,7 +75,7 @@ namespace BookingService.Infrastructure.Services
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 TotalAmount = total,
-                Status = "Pending",
+                Status = BookingStatus.Pending,
                 BookingDate = DateTime.UtcNow,
                 BookingItems = new List<BookingItem>()
             };
@@ -127,7 +128,7 @@ namespace BookingService.Infrastructure.Services
                 BookingId = booking.Id,
                 UserId = booking.UserId,
                 TotalAmount = booking.TotalAmount,
-                Status = booking.Status,
+                Status = booking.Status.ToString(),
                 CreatedAt = DateTime.UtcNow,
                 BookingItems = bookingItems.Select(i => new BookingItemDto
                 {
@@ -144,18 +145,20 @@ namespace BookingService.Infrastructure.Services
         public async Task<List<Booking>> GetPendingBookingsAsync()
         {
             return await _context.Bookings
-                .Where(b => b.Status == "Pending")
+                .Include(b => b.BookingItems)
+                .Where(b => b.Status == BookingStatus.Pending)
                 .ToListAsync();
         }
 
         public async Task<List<Booking>> GetConfirmedBookingsAsync()
         {
             return await _context.Bookings
-                .Where(b => b.Status == "Confirmed")
+                .Include(b => b.BookingItems)
+                .Where(b => b.Status == BookingStatus.Confirmed)
                 .ToListAsync();
         }
 
-        public async Task<bool> UpdateBookingStatusAsync(Guid bookingId, string status)
+        public async Task<bool> UpdateBookingStatusAsync(Guid bookingId, BookingStatus status)
         {
             var booking = await _context.Bookings.FindAsync(bookingId);
             if (booking == null)
@@ -185,9 +188,10 @@ namespace BookingService.Infrastructure.Services
                 .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
             
             if (booking == null) return false;
-            if (booking.Status == "Cancelled") return true;
+            if (booking.Status == BookingStatus.Cancelled) return true;
 
-            booking.Status = "Cancelled";
+            booking.Status = BookingStatus.Cancelled;
+            booking.CancellationDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             var cancelEvent = new BookingCancelledIntegrationEvent
@@ -201,6 +205,71 @@ namespace BookingService.Infrastructure.Services
             };
             
             await _publisher.PublishEventAsync(cancelEvent, "booking.cancelled");
+
+            return true;
+        }
+
+        public async Task<bool> RequestRefundAsync(Guid bookingId, Guid userId)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.BookingItems)
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
+
+            if (booking == null) return false;
+            if (booking.Status != BookingStatus.Cancelled) return false;
+
+            // Business Logic: Guests may cancel up to 24 hours before check-in for a full refund.
+            // We use the earliest check-in date among all items.
+            var earliestCheckIn = booking.BookingItems.Min(i => i.CheckInDate);
+            var cancellationTime = booking.CancellationDate ?? DateTime.UtcNow;
+
+            var timeUntilCheckIn = earliestCheckIn - cancellationTime;
+
+            if (timeUntilCheckIn.TotalHours < 24)
+            {
+                // Non-refundable according to policy, but admin can still process manually if configured.
+                // For now, we'll allow requesting, but maybe flag it? 
+                // The requirement says "Cancellations within 24 hours ... are non-refundable (configurable by Admin)".
+                // I will allow requesting, but the Admin will see it's non-refundable.
+                // Or I can block it here. Let's block it for now as per "non-refundable" rule.
+                throw new Exception("Cancellation was made within 24 hours of check-in and is non-refundable.");
+            }
+
+            booking.Status = BookingStatus.RefundRequested;
+            await _context.SaveChangesAsync();
+
+            var refundRequestEvent = new RefundRequestedIntegrationEvent
+            {
+                BookingId = booking.Id,
+                UserId = booking.UserId,
+                RefundAmount = booking.TotalAmount,
+                RequestedAt = DateTime.UtcNow
+            };
+
+            await _publisher.PublishEventAsync(refundRequestEvent, "booking.refund-requested");
+
+            return true;
+        }
+
+        public async Task<bool> ApproveRefundAsync(Guid bookingId)
+        {
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null) return false;
+
+            if (booking.Status != BookingStatus.RefundRequested)
+                return false;
+
+            booking.Status = BookingStatus.Refunded;
+            await _context.SaveChangesAsync();
+
+            var refundedEvent = new RefundedIntegrationEvent
+            {
+                BookingId = booking.Id,
+                RefundedAmount = booking.TotalAmount,
+                RefundedAt = DateTime.UtcNow
+            };
+
+            await _publisher.PublishEventAsync(refundedEvent, "booking.refunded");
 
             return true;
         }

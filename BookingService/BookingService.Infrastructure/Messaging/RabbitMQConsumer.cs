@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BookingService.Application.IntegrationEvents;
 using BookingService.Application.Interfaces.Services;
+using BookingService.Domain.Entities;
 using BookingService.Infrastructure.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -60,7 +61,7 @@ namespace BookingService.Infrastructure.Messaging
                         {
                             if (paymentEvent.IsSuccess)
                             {
-                                booking.Status = "Confirmed";
+                                booking.Status = BookingStatus.Confirmed;
                                 await db.SaveChangesAsync(stoppingToken);
                                 _logger.LogInformation("✓ Payment Successful. Booking {BookingId} is Confirmed.", paymentEvent.BookingId);
 
@@ -70,7 +71,7 @@ namespace BookingService.Infrastructure.Messaging
                             }
                             else
                             {
-                                booking.Status = "Failed";
+                                booking.Status = BookingStatus.Failed;
                                 await db.SaveChangesAsync(stoppingToken);
                                 _logger.LogInformation("❌ Payment Failed. Booking {BookingId} is Failed.", paymentEvent.BookingId);
                             }

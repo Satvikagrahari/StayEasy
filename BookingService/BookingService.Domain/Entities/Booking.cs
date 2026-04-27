@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace BookingService.Domain.Entities
 {
@@ -10,12 +11,16 @@ namespace BookingService.Domain.Entities
 
         public Guid UserId { get; set; }
 
+        [JsonIgnore]
         public Guid HotelId { get; set; }
 
+        [JsonIgnore]
         public DateTime CheckIn { get; set; }
 
+        [JsonIgnore]
         public DateTime CheckOut { get; set; }
 
+        [JsonIgnore]
         public int Guests { get; set; }
 
         //public decimal TotalPrice { get; set; }
@@ -24,6 +29,7 @@ namespace BookingService.Domain.Entities
         public DateTime BookingDate { get; set; } = DateTime.UtcNow;
         public List<BookingItem> BookingItems { get; set; }
 
-        public string Status { get; set; } = "Pending";
+        public BookingStatus Status { get; set; } = BookingStatus.Pending;
+        public DateTime? CancellationDate { get; set; }
     }
 }

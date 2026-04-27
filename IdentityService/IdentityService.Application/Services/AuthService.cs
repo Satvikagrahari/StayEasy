@@ -279,11 +279,13 @@ public class AuthService : IAuthService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        var expiresMinutes = double.Parse(_config["Jwt:ExpiresInMinutes"] ?? "15");
+
         var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
+            issuer: _config["Jwt:Issuer"],
+            audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(1), // use UTC
+            expires: DateTime.UtcNow.AddMinutes(expiresMinutes), // Reduced lifespan
             signingCredentials: creds
         );
 

@@ -37,4 +37,19 @@ namespace BookingService.Application.IntegrationEvents
         public bool IsSuccess { get; set; }
         public DateTime ProcessedAt { get; set; }
     }
+    
+    public class RefundRequestedIntegrationEvent
+    {
+        public Guid BookingId { get; set; }
+        public Guid UserId { get; set; }
+        public decimal RefundAmount { get; set; }
+        public DateTime RequestedAt { get; set; }
+    }
+
+    public class RefundedIntegrationEvent
+    {
+        public Guid BookingId { get; set; }
+        public decimal RefundedAmount { get; set; }
+        public DateTime RefundedAt { get; set; }
+    }
 }
