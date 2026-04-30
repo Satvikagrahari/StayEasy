@@ -1,0 +1,142 @@
+.promo-banner {
+  height: 40px;
+  position: relative;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 52px;
+  background: linear-gradient(90deg, #7C3AED, #2563EB);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  animation: slideDown .25s ease;
+}
+
+.promo-banner button {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.16);
+  color: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.admin-shell {
+  min-height: 100vh;
+  background: var(--neutral-50);
+}
+
+.admin-content {
+  min-height: 100vh;
+  margin-left: 240px;
+  background: var(--neutral-50);
+}
+
+.admin-topbar {
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 32px;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-menu-button {
+  display: none;
+  width: 38px;
+  height: 38px;
+  margin-right: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.admin-mobile-backdrop {
+  display: none;
+}
+
+.admin-eyebrow {
+  display: block;
+  color: var(--neutral-400);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.admin-topbar h1 {
+  margin-top: 4px;
+  color: var(--neutral-900);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.admin-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--neutral-700);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.notification-bell {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: #fff;
+  cursor: default;
+}
+
+.admin-main {
+  padding: 32px;
+}
+
+@media (max-width: 720px) {
+  .admin-content {
+    margin-left: 0;
+  }
+
+  .admin-menu-button {
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .admin-mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: block;
+    background: rgba(15,23,42,.45);
+  }
+
+  .admin-topbar {
+    padding: 0 18px;
+  }
+
+  .admin-main {
+    padding: 20px 14px;
+  }
+}

@@ -10,6 +10,7 @@ using BookingService.Infrastructure.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -66,7 +67,12 @@ namespace BookingService.Infrastructure.Messaging
                                 _logger.LogInformation("✓ Payment Successful. Booking {BookingId} is Confirmed.", paymentEvent.BookingId);
 
                                 // ── Send booking confirmation email ──────────────────
-                                await SendConfirmationEmailAsync(scope, booking.UserId, booking.Id, booking.TotalAmount, booking.BookingDate);
+                                var hotelId = await db.BookingItems
+                                    .Where(x => x.BookingId == booking.Id)
+                                    .Select(x => x.HotelId)
+                                    .FirstOrDefaultAsync(stoppingToken);
+
+                                await SendConfirmationEmailAsync(scope, booking.UserId, hotelId, booking.Id, booking.TotalAmount, booking.BookingDate);
                                 // ────────────────────────────────────────────────────
                             }
                             else
@@ -105,6 +111,7 @@ namespace BookingService.Infrastructure.Messaging
         private async Task SendConfirmationEmailAsync(
             IServiceScope scope,
             Guid userId,
+            Guid hotelId,
             Guid bookingId,
             decimal totalAmount,
             DateTime bookingDate)
@@ -112,9 +119,12 @@ namespace BookingService.Infrastructure.Messaging
             try
             {
                 var identityClient = scope.ServiceProvider.GetRequiredService<IIdentityClient>();
+                var catalogClient  = scope.ServiceProvider.GetRequiredService<ICatalogClient>();
                 var emailService   = scope.ServiceProvider.GetRequiredService<IEmailService>();
 
                 var userEmail = await identityClient.GetUserEmailAsync(userId);
+                var userName  = await identityClient.GetUserNameAsync(userId) ?? "Guest";
+                var hotelName = hotelId == Guid.Empty ? null : await catalogClient.GetHotelNameAsync(hotelId);
 
                 if (string.IsNullOrWhiteSpace(userEmail))
                 {
@@ -122,7 +132,13 @@ namespace BookingService.Infrastructure.Messaging
                     return;
                 }
 
-                await emailService.SendBookingConfirmationAsync(userEmail, bookingId, totalAmount, bookingDate);
+                await emailService.SendBookingConfirmationAsync(
+                    userEmail,
+                    userName,
+                    hotelName ?? string.Empty,
+                    bookingId,
+                    totalAmount,
+                    bookingDate);
             }
             catch (Exception ex)
             {

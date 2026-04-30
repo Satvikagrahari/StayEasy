@@ -19,6 +19,16 @@ builder.Configuration
 
 builder.Services.AddOcelot(builder.Configuration);
 builder.Services.AddSwaggerForOcelot(builder.Configuration);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Often needed for auth
+    });
+});
 
 var app = builder.Build();
 
@@ -34,6 +44,8 @@ app.UseSwaggerForOcelotUI(
     {
         uiOptions.RoutePrefix = "swagger";
     });
+
+app.UseCors("AllowFrontend");
 
 await app.UseOcelot();
 

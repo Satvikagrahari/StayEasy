@@ -1,0 +1,168 @@
+/* Global styles */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8f9fa;
+  color: #212529;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  flex: 1;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .5rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-size: .95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity .15s, background .15s;
+}
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn-primary   { background: #0d6efd; color: #fff; }
+.btn-primary:hover:not(:disabled)   { background: #0b5ed7; }
+.btn-danger    { background: #dc3545; color: #fff; }
+.btn-danger:hover:not(:disabled)    { background: #bb2d3b; }
+.btn-success   { background: #198754; color: #fff; }
+.btn-success:hover:not(:disabled)   { background: #157347; }
+.btn-secondary { background: #6c757d; color: #fff; }
+.btn-secondary:hover:not(:disabled) { background: #5c636a; }
+.btn-outline   { background: transparent; border: 1.5px solid #0d6efd; color: #0d6efd; }
+.btn-outline:hover:not(:disabled)   { background: #0d6efd; color: #fff; }
+.btn-sm { padding: .3rem .8rem; font-size: .85rem; }
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  padding: 1.5rem;
+}
+
+/* Form */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-weight: 500; margin-bottom: .35rem; font-size: .9rem; }
+.form-control {
+  width: 100%;
+  padding: .5rem .75rem;
+  border: 1.5px solid #ced4da;
+  border-radius: 6px;
+  font-size: .95rem;
+  transition: border-color .15s;
+}
+.form-control:focus { outline: none; border-color: #0d6efd; }
+.form-control.is-invalid { border-color: #dc3545; }
+.invalid-feedback { color: #dc3545; font-size: .82rem; margin-top: .25rem; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: end; }
+.form-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1rem; }
+.form-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; }
+textarea.form-control { resize: vertical; }
+
+/* Alerts */
+.alert { padding: .75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: .9rem; }
+.alert-danger  { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+.alert-success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+.alert-info    { background: #cff4fc; color: #055160; border: 1px solid #b6effb; }
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: .25em .6em;
+  border-radius: 4px;
+  font-size: .78rem;
+  font-weight: 600;
+}
+.badge-success  { background: #d1e7dd; color: #0f5132; }
+.badge-warning  { background: #fff3cd; color: #664d03; }
+.badge-danger   { background: #f8d7da; color: #842029; }
+.badge-info     { background: #cff4fc; color: #055160; }
+.badge-secondary{ background: #e2e3e5; color: #41464b; }
+
+/* Table */
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { padding: .65rem .9rem; text-align: left; border-bottom: 1px solid #dee2e6; }
+th { background: #f1f3f5; font-weight: 600; }
+tr:hover td { background: #f8f9fa; }
+
+/* Grid helpers */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+
+/* Stat card */
+.stat-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.07);
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+.stat-card .stat-label { font-size: .82rem; color: #6c757d; text-transform: uppercase; letter-spacing: .05em; }
+.stat-card .stat-value { font-size: 2rem; font-weight: 700; color: #0d6efd; }
+
+/* Page header */
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.page-header h2 { font-size: 1.5rem; font-weight: 700; }
+
+/* Loading spinner */
+.spinner {
+  width: 36px; height: 36px;
+  border: 4px solid #dee2e6;
+  border-top-color: #0d6efd;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin: 2rem auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-center { display: flex; justify-content: center; padding: 3rem 0; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 3rem 1rem; color: #6c757d; }
+.empty-state p { font-size: 1.1rem; }
+.empty-action { margin-top: 1rem; }
+.muted { color: #6c757d; font-size: .86rem; margin-top: .2rem; }
+.full-width { width: 100%; }
+.actions-cell { display: flex; gap: .5rem; flex-wrap: wrap; }
+.hotel-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.description { color: #6c757d; margin-top: .35rem; line-height: 1.45; }
+.hotel-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
+  padding: 2rem;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+.hotel-hero h2 { font-size: 2rem; margin: .35rem 0 .5rem; }
+.hotel-meta, .room-facts { display: flex; gap: .75rem; flex-wrap: wrap; color: #6c757d; font-size: .9rem; margin-top: .75rem; }
+.eyebrow { color: #0d6efd; font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+.cart-price-actions { display: flex; align-items: center; gap: 1rem; }
+.auth-secondary { width: 100%; margin-top: .75rem; }
+
+@media (max-width: 720px) {
+  .page-header, .hotel-hero { flex-direction: column; align-items: stretch; }
+  .cart-price-actions { align-items: flex-start; flex-direction: column; }
+}

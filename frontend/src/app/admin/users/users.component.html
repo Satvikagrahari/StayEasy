@@ -1,0 +1,73 @@
+<div class="users-header">
+  <h1 class="section-title">User Management</h1>
+  <span class="badge badge-info">{{ users().length }} users</span>
+</div>
+
+<div class="search-card card">
+  <span>⌕</span>
+  <input [(ngModel)]="search" placeholder="Search by username or email" />
+</div>
+
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (filteredUsers().length === 0) {
+  <div class="empty-state card"><p>No users found.</p></div>
+} @else {
+  <div class="users-table card">
+    <table>
+      <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Verified</th><th>Status</th><th>Last seen</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (u of filteredUsers(); track u.id) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <span class="avatar" [style.background]="avatarColor(u)">{{ initials(u) }}</span>
+                <strong>{{ u.userName }}</strong>
+                @if (isSelf(u)) { <span class="badge badge-neutral">This is you</span> }
+              </div>
+            </td>
+            <td><span class="email" [title]="u.email">{{ u.email }}</span></td>
+            <td><span [class]="u.role.toLowerCase() === 'admin' ? 'badge badge-purple' : 'badge badge-info'">{{ u.role }}</span></td>
+            <td><span [class]="u.isVerified ? 'verify ok' : 'verify no'">{{ u.isVerified ? '✓' : '✕' }}</span></td>
+            <td><span [class]="u.isActive ? 'badge badge-success' : 'badge badge-neutral'">{{ u.isActive ? 'Active' : 'Inactive' }}</span></td>
+            <td>Recently</td>
+            <td class="actions-cell">
+              <button class="btn btn-ghost btn-sm" (click)="toggleTarget.set(u)" [disabled]="actionId() === u.id || isSelf(u)" [title]="u.isActive ? 'Deactivate' : 'Activate'">
+                {{ u.isActive ? 'Deactivate' : 'Activate' }}
+              </button>
+              <button class="icon-btn delete" (click)="deleteTarget.set(u)" [disabled]="actionId() === u.id || isSelf(u)" title="Delete">🗑</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (deleteTarget(); as user) {
+  <div class="modal-backdrop">
+    <div class="confirm-modal card">
+      <h2>Delete {{ user.userName }}?</h2>
+      <p>This action is permanent and cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="deleteTarget.set(null)">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmDelete()">Delete User</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (toggleTarget(); as user) {
+  <div class="modal-backdrop">
+    <div class="confirm-modal card">
+      <h2>{{ user.isActive ? 'Deactivate' : 'Activate' }} {{ user.userName }}?</h2>
+      <p>{{ user.isActive ? 'This user will no longer be able to use their account.' : 'This user will regain account access.' }}</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="toggleTarget.set(null)">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmToggle()">{{ user.isActive ? 'Deactivate' : 'Activate' }}</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,34 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Verify your email</h2>
+      <p>Enter the OTP sent to {{ email || 'your email address' }}.</p>
+    </div>
+
+    <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <div class="form-group">
+        <label for="code">One-Time Password</label>
+        <input id="code" type="text" formControlName="code" placeholder="Enter OTP"
+          [class.is-invalid]="otpForm.get('code')?.invalid && otpForm.get('code')?.touched" />
+        <div class="error-message" *ngIf="otpForm.get('code')?.invalid && otpForm.get('code')?.touched">
+          OTP is required.
+        </div>
+      </div>
+
+      <div class="error-alert" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <button type="submit" class="btn-primary" [disabled]="otpForm.invalid || isLoading || !email">
+        <span *ngIf="isLoading" class="spinner"></span>
+        {{ isLoading ? 'Verifying...' : 'Verify OTP' }}
+      </button>
+
+      <button type="button" class="btn-secondary auth-secondary" (click)="resend()" [disabled]="isSending || !email">
+        {{ isSending ? 'Sending...' : 'Resend OTP' }}
+      </button>
+
+      <p class="auth-footer">
+        Already verified? <a routerLink="/login">Log in</a>
+      </p>
+    </form>
+  </div>
+</div>

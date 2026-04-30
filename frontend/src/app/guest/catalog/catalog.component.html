@@ -1,0 +1,154 @@
+<div class="browse-page">
+  <aside class="filters-sidebar card">
+    <div class="filters-title">
+      <h3>Filters</h3>
+      <button type="button" (click)="clearFilters()">Clear all</button>
+    </div>
+
+    <section class="filter-section">
+      <h4>Search</h4>
+      <div class="search-input">
+        <span>⌕</span>
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="debounceFilters()" placeholder="Hotel name or city" />
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <h4>Price per night</h4>
+      <div class="price-inputs">
+        <input type="number" [(ngModel)]="minPriceFilter" (ngModelChange)="applyFilters()" placeholder="Min ₹" />
+        <input type="number" [(ngModel)]="maxPriceFilter" (ngModelChange)="applyFilters()" placeholder="Max ₹" />
+      </div>
+      <input class="range" type="range" min="1000" max="50000" step="500" [(ngModel)]="maxPriceFilter" (ngModelChange)="applyFilters()" />
+    </section>
+
+    <section class="filter-section">
+      <h4>Star Rating</h4>
+      <div class="star-filter">
+        @for (star of [1,2,3,4,5]; track star) {
+          <button type="button" [class.active]="star <= starFilter" (click)="setStarFilter(star)">★</button>
+        }
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <h4>Room Type</h4>
+      <div class="checkbox-list">
+        @for (type of availableRoomTypes(); track type) {
+          <label>
+            <input type="checkbox" [checked]="isRoomSelected(type)" (change)="toggleRoomType(type, $any($event.target).checked)" />
+            <span></span>
+            {{ type }}
+          </label>
+        }
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <h4>Sort by</h4>
+      <label class="radio-row"><input type="radio" name="sort" value="priceAsc" [(ngModel)]="sortBy" (ngModelChange)="applyFilters()" /> Price (low to high)</label>
+      <label class="radio-row"><input type="radio" name="sort" value="priceDesc" [(ngModel)]="sortBy" (ngModelChange)="applyFilters()" /> Price (high to low)</label>
+      <label class="radio-row"><input type="radio" name="sort" value="ratingDesc" [(ngModel)]="sortBy" (ngModelChange)="applyFilters()" /> Rating (high to low)</label>
+      <label class="radio-row"><input type="radio" name="sort" value="nameAsc" [(ngModel)]="sortBy" (ngModelChange)="applyFilters()" /> Name (A-Z)</label>
+    </section>
+  </aside>
+
+  <section class="results-area">
+    <div class="mobile-filters">
+      <button type="button" (click)="clearFilters()">Clear</button>
+      @for (type of availableRoomTypes(); track type) {
+        <button type="button" [class.active]="isRoomSelected(type)" (click)="toggleRoomType(type, !isRoomSelected(type))">{{ type }}</button>
+      }
+    </div>
+
+    <div class="results-topbar">
+      <div>
+        <h2><span class="count-animate">{{ filtered().length }}</span> hotels found</h2>
+        @if (dateSummary()) {
+          <p class="date-context">Stay dates: {{ dateSummary() }}</p>
+        }
+      </div>
+      <div class="result-controls">
+        <select [(ngModel)]="sortBy" (ngModelChange)="applyFilters()">
+          <option value="priceAsc">Price low to high</option>
+          <option value="priceDesc">Price high to low</option>
+          <option value="ratingDesc">Rating high to low</option>
+          <option value="nameAsc">Name A-Z</option>
+        </select>
+        <button type="button" [class.active]="viewMode() === 'grid'" (click)="viewMode.set('grid')">▦</button>
+        <button type="button" [class.active]="viewMode() === 'list'" (click)="viewMode.set('list')">☰</button>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="hotel-grid">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="hotel-card skeleton-card"><div></div><span></span><span></span><span></span></div>
+        }
+      </div>
+    } @else if (error()) {
+      <div class="alert alert-danger">{{ error() }}</div>
+    } @else if (filtered().length === 0) {
+      <div class="empty-results">
+        <div>🔍</div>
+        <h3>No hotels match your filters</h3>
+        <p>Try adjusting your search criteria</p>
+        <button class="btn btn-primary" (click)="clearFilters()">Clear Filters</button>
+      </div>
+    } @else if (viewMode() === 'grid') {
+      <div class="hotel-grid">
+        @for (hotel of filtered(); track hotel.hotelId) {
+          <a [routerLink]="['/hotels', hotel.hotelId]" [queryParams]="hotelQueryParams()" class="hotel-card">
+            <div class="hotel-image" [class]="gradientClass(hotel)">
+              @if (hasHighDemand(hotel)) { <span class="high-demand-ribbon">HIGH DEMAND</span> }
+              <span class="room-badge">{{ primaryRoom(hotel) }}</span>
+              <span class="rating-badge">⭐ {{ rating(hotel) }}.0</span>
+              <strong>{{ hotelInitials(hotel) }}</strong>
+              @if (lowAvailability(hotel); as left) { <span class="only-left-badge">🔴 Only {{ left }} left!</span> }
+            </div>
+            <div class="hotel-body">
+              <h3>{{ hotel.name }}</h3>
+              <p class="location">📍 {{ hotel.city }}, {{ hotel.country || 'India' }}</p>
+              <div class="amenities">@for (pill of amenityPills(hotel); track pill) { <span>{{ pill }}</span> }</div>
+              <div class="stars">@for (star of [1,2,3,4,5]; track star) { <span [class.empty]="star > rating(hotel)">{{ star <= rating(hotel) ? '★' : '☆' }}</span> }</div>
+              <div class="card-divider"></div>
+              <div class="price-row">
+                <div><small>From</small><strong>{{ minPrice(hotel) || 6000 | currency:'INR':'symbol':'1.0-0' }}</strong><small>/night</small></div>
+                <span class="btn btn-primary btn-sm">View Hotel →</span>
+              </div>
+              @if (hasPriceDrop(hotel)) { <p class="price-drop">💰 Price dropped!</p> }
+              @if (hasSocialProof(hotel)) { <p class="social-proof">🔥 {{ bookedTodayCount(hotel) }} bookings today</p> }
+            </div>
+          </a>
+        }
+      </div>
+    } @else {
+      <div class="hotel-list">
+        @for (hotel of filtered(); track hotel.hotelId) {
+          <a [routerLink]="['/hotels', hotel.hotelId]" [queryParams]="hotelQueryParams()" class="hotel-list-card">
+            <div class="list-image" [class]="gradientClass(hotel)">
+              @if (hasHighDemand(hotel)) { <span class="high-demand-ribbon">HIGH DEMAND</span> }
+              <strong>{{ hotelInitials(hotel) }}</strong>
+              @if (lowAvailability(hotel); as left) { <span class="only-left-badge">🔴 Only {{ left }} left!</span> }
+            </div>
+            <div class="list-body">
+              <h3>{{ hotel.name }}</h3>
+              <p class="location">📍 {{ hotel.city }}, {{ hotel.country || 'India' }}</p>
+              <p class="description">{{ hotel.description || hotel.address }}</p>
+              <div class="amenities">@for (pill of amenityPills(hotel); track pill) { <span>{{ pill }}</span> }</div>
+              <div class="stars">@for (star of [1,2,3,4,5]; track star) { <span [class.empty]="star > rating(hotel)">{{ star <= rating(hotel) ? '★' : '☆' }}</span> }</div>
+            </div>
+            <div class="list-price">
+              <small>From</small>
+              <strong>{{ minPrice(hotel) || 6000 | currency:'INR':'symbol':'1.0-0' }}</strong>
+              <span>/night</span>
+              @if (hasPriceDrop(hotel)) { <em>💰 Price dropped!</em> }
+              @if (hasSocialProof(hotel)) { <em>🔥 {{ bookedTodayCount(hotel) }} bookings today</em> }
+              <span class="btn btn-primary btn-sm">View</span>
+            </div>
+          </a>
+        }
+      </div>
+    }
+  </section>
+</div>

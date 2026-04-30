@@ -1,0 +1,64 @@
+<section class="trips-page">
+  <header class="trips-header">
+    <h1 class="section-title">My Trips</h1>
+    <p>Manage your bookings</p>
+  </header>
+
+  <nav class="trip-tabs">
+    <button [class.active]="activeTab() === 'upcoming'" (click)="activeTab.set('upcoming')">Upcoming</button>
+    <button [class.active]="activeTab() === 'past'" (click)="activeTab.set('past')">Past</button>
+    <button [class.active]="activeTab() === 'cancelled'" (click)="activeTab.set('cancelled')">Cancelled</button>
+  </nav>
+
+  @if (isLoading()) {
+    <div class="booking-list">
+      @for (i of [1,2,3]; track i) { <div class="booking-card skeleton-card card"><span></span><span></span><span></span></div> }
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-danger">{{ error() }}</div>
+  } @else if (filteredBookings().length === 0) {
+    <div class="empty-state card">
+      <p>{{ activeTab() === 'upcoming' ? 'No upcoming trips yet.' : activeTab() === 'past' ? 'No past trips to show.' : 'No cancelled bookings.' }}</p>
+      <a routerLink="/hotels" class="btn btn-primary empty-action">Browse Hotels</a>
+    </div>
+  } @else {
+    <div class="booking-list">
+      @for (booking of filteredBookings(); track booking.id) {
+        <article class="booking-card card" [class]="statusClass(booking.status)">
+          <div class="accent"></div>
+          <div class="booking-top">
+            <div>
+              <h3>{{ hotelName(booking) }}</h3>
+              <span class="badge badge-info">{{ roomName(booking) }}</span>
+            </div>
+            <span [class]="statusBadge(booking.status)">{{ booking.status }}</span>
+          </div>
+          <p class="trip-line">📅 {{ dateRange(booking) }} · {{ nights(booking) }} nights</p>
+          <p class="trip-line">📍 {{ location(booking) }}</p>
+          <div class="amount-row"><strong>Total: {{ booking.totalAmount | currency:'INR':'symbol':'1.0-0' }}</strong></div>
+          <div class="booking-actions">
+            <button class="btn btn-ghost btn-sm">View Details</button>
+            @if (canCancel(booking)) {
+              <button class="btn btn-danger btn-sm" (click)="cancelTarget.set(booking)" [disabled]="actionId() === booking.id">Cancel Booking</button>
+            } @else if (activeTab() === 'past') {
+              <button class="btn btn-ghost btn-sm" (click)="writeReview()">Write a Review</button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>
+
+@if (cancelTarget(); as target) {
+  <div class="modal-backdrop">
+    <div class="confirm-modal card">
+      <h2>Cancel this booking?</h2>
+      <p>This action cannot be undone. Are you sure you want to cancel your stay at {{ hotelName(target) }}?</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="cancelTarget.set(null)">Keep Booking</button>
+        <button class="btn btn-danger" (click)="confirmCancel()">Yes, Cancel</button>
+      </div>
+    </div>
+  </div>
+}

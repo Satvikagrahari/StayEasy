@@ -1,0 +1,60 @@
+<div class="auth-shell">
+  <aside class="auth-left login-left">
+    <div class="brand-mark">🏨 StayEasy</div>
+    <div class="illustration-card">
+      <div>🌊</div>
+      <h2>Every great trip starts with the right stay.</h2>
+      <p>Compare beautiful hotels, manage bookings, and travel with fewer little gremlins in the machinery.</p>
+    </div>
+    <div class="testimonial">
+      <h3>What 50,000+ travelers say about us</h3>
+      <div class="mini-review">★★★★★ “Fast booking and clear prices.” <strong>— Riya S.</strong></div>
+      <div class="mini-review">★★★★★ “Cancellation was refreshingly painless.” <strong>— Kabir M.</strong></div>
+      <div class="mini-review">★★★★☆ “Great support when my plans changed.” <strong>— Asha P.</strong></div>
+    </div>
+  </aside>
+
+  <main class="auth-right">
+    <div class="auth-form-wrap">
+      <a routerLink="/" class="auth-logo">🏨 StayEasy</a>
+      <h1>Welcome back</h1>
+      <p class="auth-subtitle">Sign in to manage your bookings.</p>
+
+      @if (showVerifiedBanner) {
+        <div class="success-alert">Email verified! You can now log in.</div>
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <label class="input-wrap" [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+          <span>✉</span>
+          <input type="email" formControlName="email" placeholder="Email address" />
+        </label>
+        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+          <div class="error-message">✕ Please enter a valid email</div>
+        }
+
+        <label class="input-wrap" [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          <span>🔒</span>
+          <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Password" />
+          <button type="button" (click)="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
+        </label>
+        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+          <div class="error-message">✕ Password is required</div>
+        }
+
+        <a href="#" class="forgot-link">Forgot password?</a>
+
+        @if (errorMessage) {
+          <div class="error-alert">{{ errorMessage }}</div>
+        }
+
+        <button type="submit" class="btn btn-primary btn-lg full-width" [disabled]="isLoading || loginForm.invalid">
+          @if (isLoading) { <span class="spinner"></span> } @else { Log In }
+        </button>
+
+        <div class="divider"><span>or continue with</span></div>
+        <p class="auth-footer">Don't have an account? <a routerLink="/register">Sign up →</a></p>
+      </form>
+    </div>
+  </main>
+</div>

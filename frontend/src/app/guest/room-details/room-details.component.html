@@ -1,0 +1,26 @@
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else {
+  @if (room(); as r) {
+    <div class="room-detail-card card">
+      <h2>{{ r.name }}</h2>
+      <p class="muted">{{ r.description || 'A StayEasy room with clean essentials and simple booking.' }}</p>
+      <div class="room-info">
+        <div class="info-row"><span class="label">Price per night</span><span class="value">{{ r.pricePerNight | currency:'INR':'symbol':'1.0-0' }}</span></div>
+        <div class="info-row"><span class="label">Max guests</span><span class="value">{{ r.maxGuests || 1 }}</span></div>
+        <div class="info-row"><span class="label">Total rooms</span><span class="value">{{ r.totalRooms }}</span></div>
+        <div class="info-row">
+          <span class="label">Available rooms</span>
+          <span class="value" [class.text-success]="r.availableRooms > 0" [class.text-danger]="r.availableRooms === 0">
+            {{ r.availableRooms > 0 ? r.availableRooms + ' available' : 'Fully booked' }}
+          </span>
+        </div>
+      </div>
+      <div class="room-actions">
+        <a routerLink="/catalog" class="btn btn-secondary">Back to Catalog</a>
+      </div>
+    </div>
+  }
+}

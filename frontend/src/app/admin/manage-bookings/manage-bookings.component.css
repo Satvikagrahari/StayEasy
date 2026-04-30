@@ -1,0 +1,28 @@
+.filters { margin-bottom: 18px; }
+.filters-grid { display:grid; grid-template-columns:repeat(4,1fr) auto; gap:14px; align-items:end; }
+label { display:grid; gap:6px; color:var(--neutral-600); font-size:13px; font-weight:700; }
+select,input { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:var(--radius-md); outline:0; background:#fff; }
+.filter-actions { display:flex; gap:8px; }
+.bookings-table { padding:0; overflow:hidden; }
+tbody tr.even td { background:var(--neutral-50); }
+tbody tr:hover td { background:var(--primary-50); }
+td small { display:block; color:var(--neutral-500); }
+.guest-cell { display:flex; align-items:center; gap:10px; }
+.guest-cell > span { width:32px; height:32px; display:grid; place-items:center; border-radius:50%; background:var(--primary-light); color:var(--primary); font-size:12px; font-weight:800; }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+.icon-btn { width:34px; height:34px; border:0; border-radius:50%; background:transparent; cursor:pointer; }
+.icon-btn:hover { background:var(--primary-50); }
+.pagination { display:flex; gap:6px; justify-content:flex-end; padding:16px; }
+.pagination button { width:34px; height:34px; border:1px solid var(--border); border-radius:8px; background:#fff; cursor:pointer; }
+.pagination button.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.modal-backdrop { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; background:rgba(15,23,42,.52); }
+.booking-modal { position:relative; width:min(720px,100%); max-height:86vh; overflow:auto; animation:bounceIn .2s ease; }
+.modal-close { position:absolute; top:16px; right:16px; border:0; background:transparent; font-size:28px; cursor:pointer; }
+.booking-modal h2 { font-size:24px; font-weight:800; margin-bottom:16px; }
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+.detail-grid p { display:grid; gap:3px; padding:12px; border-radius:var(--radius-md); background:var(--neutral-50); }
+.detail-grid span { color:var(--neutral-500); font-size:12px; }
+.detail-grid strong { word-break:break-all; }
+.item-detail { padding:12px 0; border-top:1px solid var(--border); }
+@media (max-width:1000px){ .filters-grid{grid-template-columns:1fr 1fr;} }
+@media (max-width:640px){ .filters-grid,.detail-grid{grid-template-columns:1fr;} }

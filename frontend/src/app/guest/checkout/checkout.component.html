@@ -1,0 +1,134 @@
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (!cart() || cart()!.items.length === 0) {
+  <div class="empty-state card">
+    <p>Your cart is empty.</p>
+    <a routerLink="/hotels" class="btn btn-primary empty-action">Browse Hotels</a>
+  </div>
+} @else {
+  <div class="checkout-page">
+    <div class="steps">
+      <div class="step" [class.active]="checkoutStep() === 1" [class.done]="checkoutStep() > 1"><span>{{ checkoutStep() > 1 ? '✓' : '1' }}</span><b>Review</b></div>
+      <i></i>
+      <div class="step" [class.active]="checkoutStep() === 2" [class.done]="checkoutStep() > 2"><span>{{ checkoutStep() > 2 ? '✓' : '2' }}</span><b>Payment</b></div>
+      <i></i>
+      <div class="step" [class.active]="checkoutStep() === 3"><span>3</span><b>Confirmation</b></div>
+    </div>
+
+    @if (checkoutStep() === 1) {
+      <section class="checkout-card card">
+        <h1>Review your booking</h1>
+        @for (item of cart()!.items; track item.cartItemId) {
+          <div class="review-item">
+            <div>
+              <h3>Room {{ item.roomTypeId.slice(0, 8) }}</h3>
+              <p>📅 {{ item.checkInDate | date:'mediumDate' }} – {{ item.checkOutDate | date:'mediumDate' }} · {{ nights(item) }} nights</p>
+              <p>👥 {{ item.guests }} {{ item.guests === 1 ? 'guest' : 'guests' }}</p>
+            </div>
+            <strong>{{ subtotal(item) | currency:'INR':'symbol':'1.0-0' }}</strong>
+          </div>
+        }
+        <div class="summary-box">
+          <p><span>Subtotal</span><strong>{{ total() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+          <p><span>Taxes & fees</span><strong>{{ taxes() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+          <div></div>
+          <p class="total"><span>Total</span><strong>{{ payableTotal() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+        </div>
+        <button class="btn btn-primary btn-lg" (click)="continueToPayment()">Continue to Payment</button>
+      </section>
+    } @else if (checkoutStep() === 2) {
+      <section class="payment-card card">
+        <h1>Payment</h1>
+        <div class="secure-box">🔒 Your payment is secured by 256-bit SSL encryption.</div>
+        <div class="amount-display">{{ payableTotal() | currency:'INR':'symbol':'1.0-0' }}</div>
+        <button class="btn btn-primary btn-lg full-width" (click)="placeOrder()" [disabled]="placing() || paymentOpen()">
+          🔒 {{ placing() ? 'Creating order...' : ('Pay ' + (payableTotal() | currency:'INR':'symbol':'1.0-0')) }}
+        </button>
+      </section>
+    } @else {
+      <section class="confirmation-state card">
+        <svg viewBox="0 0 80 80" class="success-check">
+          <circle cx="40" cy="40" r="34"></circle>
+          <path d="M24 41l10 10 23-25"></path>
+        </svg>
+        <h1>Booking Confirmed! 🎉</h1>
+        <div class="booking-id"><code>{{ confirmedBookingId() }}</code><button type="button" (click)="copyBookingId()">Copy</button></div>
+        <div class="confirm-summary">
+          @for (item of cart()!.items; track item.cartItemId) {
+            <p>Room {{ item.roomTypeId.slice(0, 8) }} · {{ item.checkInDate | date:'mediumDate' }} – {{ item.checkOutDate | date:'mediumDate' }} · {{ item.guests }} guest(s)</p>
+          }
+        </div>
+        <p class="muted">You'll receive a confirmation email shortly.</p>
+        <div class="confirm-actions">
+          <a routerLink="/bookings" class="btn btn-primary">View My Bookings</a>
+          <a routerLink="/hotels" class="btn btn-ghost">Book Another Hotel</a>
+        </div>
+      </section>
+    }
+  </div>
+}
+
+@if (paymentOpen()) {
+  <div class="rzp-overlay" (click)="closePayment()">
+    <div class="rzp-modal" (click)="$event.stopPropagation()">
+      <div class="rzp-header">
+        <div class="rzp-brand">
+          <div class="rzp-logo">R</div>
+          <div>
+            <div class="rzp-title">Razorpay</div>
+            <div class="rzp-sub">StayEasy Checkout</div>
+          </div>
+        </div>
+        <button type="button" class="rzp-close" (click)="closePayment()" [disabled]="paymentStep() === 'processing' || confirming()">×</button>
+      </div>
+
+      @if (paymentStep() === 'checkout') {
+        <div class="rzp-body">
+          <div class="rzp-amount">
+            <div class="rzp-amount-label">Amount</div>
+            <div class="rzp-amount-value">{{ rzpAmount() | currency:'INR':'symbol':'1.0-0' }}</div>
+          </div>
+          @if (paymentError()) { <div class="alert alert-danger">{{ paymentError() }}</div> }
+          <div class="rzp-methods">
+            <button type="button" class="rzp-tab" [class.active]="rzpMethod === 'upi'" (click)="rzpMethod = 'upi'">UPI</button>
+            <button type="button" class="rzp-tab" [class.active]="rzpMethod === 'card'" (click)="rzpMethod = 'card'">Card</button>
+          </div>
+          @if (rzpMethod === 'upi') {
+            <div class="form-group"><label>UPI ID</label><input class="form-control" placeholder="name@bank" [(ngModel)]="rzpUpiVpa" /></div>
+          } @else {
+            <div class="form-group"><label>Card Number</label><input class="form-control" placeholder="1234 5678 9012 3456" [(ngModel)]="rzpCardNumber" /></div>
+            <div class="form-group"><label>Cardholder Name</label><input class="form-control" placeholder="Satvik" [(ngModel)]="rzpCardName" /></div>
+            <div class="rzp-row">
+              <div class="form-group"><label>Expiry</label><input class="form-control" placeholder="MM/YY" [(ngModel)]="rzpCardExpiry" /></div>
+              <div class="form-group"><label>CVV</label><input class="form-control" placeholder="123" [(ngModel)]="rzpCardCvv" /></div>
+            </div>
+          }
+          <div class="rzp-actions">
+            <button type="button" class="btn btn-secondary" (click)="closePayment()">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="submitPayment()">Pay {{ rzpAmount() | currency:'INR':'symbol':'1.0-0' }}</button>
+          </div>
+        </div>
+      } @else if (paymentStep() === 'processing') {
+        <div class="rzp-body rzp-center"><div class="spinner"></div><div class="rzp-processing">Processing payment...</div><div class="muted">Please wait</div></div>
+      } @else if (paymentStep() === 'otp') {
+        <div class="rzp-body">
+          <div class="rzp-result"><div class="rzp-result-title">Additional authentication</div><div class="rzp-result-sub">Enter the OTP sent to your registered mobile number.</div></div>
+          @if (paymentError()) { <div class="alert alert-danger">{{ paymentError() }}</div> }
+          <div class="form-group"><label>OTP</label><input class="form-control" inputmode="numeric" maxlength="6" placeholder="6-digit OTP" [(ngModel)]="rzpOtp" /></div>
+          <div class="rzp-actions"><button type="button" class="btn btn-secondary" (click)="closePayment()">Cancel</button><button type="button" class="btn btn-primary" (click)="submitOtp()">Verify & Pay</button></div>
+        </div>
+      } @else {
+        <div class="rzp-body">
+          @if (rzpResultSuccess() === true) {
+            <div class="rzp-result rzp-success"><div class="rzp-result-title">Payment successful</div><div class="rzp-result-sub">{{ rzpResultMessage() || 'Your payment was captured.' }}</div></div>
+          } @else {
+            <div class="rzp-result rzp-fail"><div class="rzp-result-title">Payment failed</div><div class="rzp-result-sub">{{ rzpResultMessage() || 'The payment could not be completed.' }}</div></div>
+          }
+          <div class="rzp-actions"><button type="button" class="btn btn-primary" (click)="continueAfterPayment()" [disabled]="confirming()">{{ confirming() ? 'Confirming...' : 'Continue' }}</button></div>
+        </div>
+      }
+    </div>
+  </div>
+}

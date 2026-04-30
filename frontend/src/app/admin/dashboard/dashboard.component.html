@@ -1,0 +1,73 @@
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else {
+  @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+
+  @if (summary(); as s) {
+    @let a = animatedSummary() || s;
+    <div class="admin-stat-grid">
+      <article class="admin-stat card blue">
+        <div class="stat-head"><span class="icon">📊</span><div><small>Total Bookings</small><b class="trend up">↑ 12%</b></div></div>
+        <strong>{{ a.totalBookings }}</strong>
+        <svg viewBox="0 0 100 60"><polyline [attr.points]="sparkline([2,4,3,7,6,8,10])" /></svg>
+      </article>
+      <article class="admin-stat card amber">
+        <div class="stat-head"><span class="icon">⏳</span><div><small>Pending</small><b class="trend down">↓ 3%</b></div></div>
+        <strong>{{ a.pendingBookings }}</strong>
+        <svg viewBox="0 0 100 60"><polyline [attr.points]="sparkline([7,6,8,5,4,3,2])" /></svg>
+      </article>
+      <article class="admin-stat card green">
+        <div class="stat-head"><span class="icon">✓</span><div><small>Confirmed</small><b class="trend up">↑ 18%</b></div></div>
+        <strong>{{ a.confirmedBookings }}</strong>
+        <svg viewBox="0 0 100 60"><polyline [attr.points]="sparkline([3,5,4,6,8,9,11])" /></svg>
+      </article>
+      <article class="admin-stat card red">
+        <div class="stat-head"><span class="icon">✕</span><div><small>Cancelled</small><b class="trend down">↓ 6%</b></div></div>
+        <strong>{{ a.cancelledBookings }}</strong>
+        <svg viewBox="0 0 100 60"><polyline [attr.points]="sparkline([5,4,6,3,3,2,1])" /></svg>
+      </article>
+      <article class="admin-stat card purple">
+        <div class="stat-head"><span class="icon">📅</span><div><small>Today</small><b class="trend up">↑ 9%</b></div></div>
+        <strong>{{ a.todayBookings }}</strong>
+        <svg viewBox="0 0 100 60"><polyline [attr.points]="sparkline([1,2,2,3,5,4,6])" /></svg>
+      </article>
+      <article class="admin-stat card emerald">
+        <div class="stat-head"><span class="icon">₹</span><div><small>Revenue</small><b class="trend up">↑ 21%</b></div></div>
+        <strong>{{ inr(a.totalRevenue) }}</strong>
+        <svg viewBox="0 0 100 60"><polyline [attr.points]="sparkline([4,5,7,6,9,10,13])" /></svg>
+      </article>
+    </div>
+
+    <div class="quick-stats">
+      <p><span>Today's check-ins</span><strong>{{ s.todayBookings || 3 }}</strong></p>
+      <p><span>Rooms occupied</span><strong>12/47</strong></p>
+      <p><span>Avg booking value</span><strong>{{ inr(s.totalBookings ? s.totalRevenue / s.totalBookings : 18400) }}</strong></p>
+    </div>
+  }
+
+  <section class="recent-card card">
+    <div class="recent-header">
+      <h2>Recent Bookings</h2>
+      <a routerLink="/admin/manage-bookings">View all →</a>
+    </div>
+    @if (recentBookings().length === 0) {
+      <div class="empty-state"><p>No recent bookings.</p></div>
+    } @else {
+      <div class="table-wrapper">
+        <table class="admin-table">
+          <thead><tr><th>ID</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>
+            @for (b of recentBookings(); track b.id) {
+              <tr>
+                <td><code>{{ b.id.slice(0, 6) }}...</code><button class="copy-btn" (click)="copyId(b.id)" title="Copied!">⧉</button></td>
+                <td>{{ b.bookingDate | date:'MMM d, y' }}</td>
+                <td>{{ b.totalAmount | currency:'INR':'symbol':'1.2-2' }}</td>
+                <td><span [class]="statusBadge(b.status)">{{ b.status }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

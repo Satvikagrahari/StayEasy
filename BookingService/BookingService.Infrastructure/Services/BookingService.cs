@@ -23,38 +23,22 @@ namespace BookingService.Infrastructure.Services
             _context = context;
             _publisher = publisher;
         }
-        //public async Task CreateBookingAsync(Guid userId, CreateBookingRequest request)
-        //{
-        //    var booking = new Booking
-        //    {
-        //        Id = Guid.NewGuid(),
-        //        UserId = userId,
-        //        HotelId = request.HotelId,
-        //        CheckIn = request.CheckIn,
-        //        CheckOut = request.CheckOut,
-        //        Guests = request.Guests,
-        //        TotalPrice = 1000, // temp logic
-        //        Status = "Confirmed"
-        //    };
+        
 
-        //    await _context.Bookings.AddAsync(booking);
-        //    await _context.SaveChangesAsync();
-
-
-        //    _publisher.PublishBookingCreated(new
-        //    {
-        //        booking.Id,
-        //        booking.UserId,
-        //        booking.HotelId,
-        //        booking.TotalPrice
-        //    });
-        //}
+        public async Task<List<Booking>> GetAllBookingsAsync()
+        {
+            return await _context.Bookings
+                .Include(b => b.BookingItems)
+                .OrderByDescending(b => b.BookingDate)
+                .ToListAsync();
+        }
 
         public async Task<List<Booking>> GetUserBookingsAsync(Guid userId)
         {
             return await _context.Bookings
                 .Include(b => b.BookingItems)
                 .Where(x => x.UserId == userId)
+                .OrderByDescending(b => b.BookingDate)
                 .ToListAsync();
         }
         public async Task<Guid> CheckoutAsync(Guid userId)

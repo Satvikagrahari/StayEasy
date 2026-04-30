@@ -21,8 +21,10 @@ namespace BookingService.Infrastructure.Services
 
         public async Task SendBookingConfirmationAsync(
             string toEmail,
+          string userName,
+          string hotelName,
             Guid bookingId,
-            decimal totalAmount,
+          decimal billAmount,
             DateTime bookingDate)
         {
             var smtpSection = _config.GetSection("Smtp");
@@ -37,7 +39,7 @@ namespace BookingService.Infrastructure.Services
             _logger.LogInformation("📤 Sending email via {Host}:{Port} from {FromEmail}", host, port, fromEmail);
 
             var subject = "✅ Your StayEasy Booking is Confirmed!";
-            var body    = BuildEmailBody(bookingId, totalAmount, bookingDate);
+            var body    = BuildEmailBody(userName, hotelName, bookingId, billAmount, bookingDate);
 
             using var client = new SmtpClient(host, port)
             {
@@ -67,8 +69,11 @@ namespace BookingService.Infrastructure.Services
             }
         }
 
-        private static string BuildEmailBody(Guid bookingId, decimal totalAmount, DateTime bookingDate)
+        private static string BuildEmailBody(string userName, string hotelName, Guid bookingId, decimal billAmount, DateTime bookingDate)
         {
+          var safeUserName = string.IsNullOrWhiteSpace(userName) ? "Guest" : userName.Trim();
+          var safeHotelName = string.IsNullOrWhiteSpace(hotelName) ? "(Hotel details unavailable)" : hotelName.Trim();
+
             return $"""
                 <!DOCTYPE html>
                 <html lang="en">
@@ -111,7 +116,7 @@ namespace BookingService.Infrastructure.Services
                           <tr>
                             <td style="padding:36px 40px;">
                               <p style="font-size:15px;color:#444;line-height:1.7;margin:0 0 24px;">
-                                Hi there! Your booking has been <strong>confirmed</strong> and
+                                Hi <strong>{safeUserName}</strong>! Your booking has been <strong>confirmed</strong> and
                                 payment has been processed successfully. Get ready for a wonderful stay!
                               </p>
 
@@ -136,15 +141,21 @@ namespace BookingService.Infrastructure.Services
                                         </td>
                                       </tr>
                                       <tr style="background:#fff;">
+                                        <td style="color:#666;font-size:14px;">Hotel Name</td>
+                                        <td style="color:#222;font-size:14px;font-weight:600;">
+                                          {safeHotelName}
+                                        </td>
+                                      </tr>
+                                      <tr style="background:#fff;">
                                         <td style="color:#666;font-size:14px;">Booking Date</td>
                                         <td style="color:#222;font-size:14px;font-weight:600;">
                                           {bookingDate:dd MMM yyyy, hh:mm tt} UTC
                                         </td>
                                       </tr>
                                       <tr>
-                                        <td style="color:#666;font-size:14px;">Total Amount</td>
+                                        <td style="color:#666;font-size:14px;">Bill Amount</td>
                                         <td style="color:#1a73e8;font-size:16px;font-weight:700;">
-                                          ₹{totalAmount:N2}
+                                          ₹{billAmount:N2}
                                         </td>
                                       </tr>
                                       <tr style="background:#fff;">

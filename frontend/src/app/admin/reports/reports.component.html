@@ -1,0 +1,68 @@
+<div class="reports-header">
+  <h1 class="section-title">Reports</h1>
+  <div class="range-controls">
+    @for (preset of ['Last 7 days','Last 30 days','This month','Custom']; track preset) {
+      <button [class.active]="rangePreset === preset" (click)="applyPreset(preset)">{{ preset }}</button>
+    }
+  </div>
+</div>
+
+<div class="tabs">
+  <button [class.active]="activeTab() === 'revenue'" (click)="setTab('revenue')">Revenue</button>
+  <button [class.active]="activeTab() === 'occupancy'" (click)="setTab('occupancy')">Occupancy</button>
+  <button [class.active]="activeTab() === 'cancellations'" (click)="setTab('cancellations')">Cancellations</button>
+</div>
+
+<div class="card date-filter">
+  @if (rangePreset === 'Custom') {
+    <label>From<input type="date" [(ngModel)]="startDate" /></label>
+    <label>To<input type="date" [(ngModel)]="endDate" /></label>
+  }
+  <div class="active-range">
+    <span>Showing</span>
+    <strong>{{ dateRangeLabel() }}</strong>
+  </div>
+  <button class="btn btn-primary btn-sm" (click)="rangePreset === 'Custom' ? applyCustomRange() : load()">Apply</button>
+</div>
+
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else {
+  @if (activeTab() === 'revenue') {
+    <div class="kpi-grid">
+      <div class="stat-card"><span class="stat-label">Total Revenue</span><span class="stat-value">{{ totalRevenue() | currency:'INR':'symbol':'1.0-0' }}</span><b>↑ 14%</b></div>
+      <div class="stat-card"><span class="stat-label">Total Bookings</span><span class="stat-value">{{ totalBookings() }}</span></div>
+      <div class="stat-card"><span class="stat-label">Avg Booking Value</span><span class="stat-value">{{ avgBookingValue() | currency:'INR':'symbol':'1.0-0' }}</span></div>
+    </div>
+  } @else if (activeTab() === 'occupancy') {
+    <div class="kpi-grid"><div class="stat-card"><span class="stat-label">Avg occupied / active day</span><span class="stat-value">{{ avgOccupancy() }}</span></div></div>
+  } @else {
+    <div class="kpi-grid">
+      <div class="stat-card"><span class="stat-label">Total Cancellations</span><span class="stat-value">{{ totalCancellations() }}</span></div>
+      <div class="stat-card"><span class="stat-label">This week</span><span class="stat-value">{{ totalCancellations() }}</span></div>
+      <div class="stat-card"><span class="stat-label">Cancellation rate</span><span class="stat-value">{{ cancellationRate() }}%</span></div>
+    </div>
+  }
+
+  <section class="chart-shell card">
+    @if (!hasActiveData()) {
+      <div class="chart-empty">
+        <strong>No data for this range</strong>
+        <span>Try a wider date range or refresh after new bookings arrive.</span>
+      </div>
+    }
+    <canvas #reportCanvas></canvas>
+  </section>
+
+  <div class="table-wrapper card report-table">
+    @if (activeTab() === 'revenue') {
+      <table><thead><tr><th>Date</th><th>Revenue</th><th>Bookings</th></tr></thead><tbody>@for (r of revenue(); track r.date) { <tr><td>{{ r.date | date:'mediumDate' }}</td><td>{{ r.revenue | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ r.bookingCount }}</td></tr> }</tbody></table>
+    } @else if (activeTab() === 'occupancy') {
+      <table><thead><tr><th>Date</th><th>Occupied Bookings</th></tr></thead><tbody>@for (r of occupancy(); track r.date) { <tr><td>{{ r.date | date:'mediumDate' }}</td><td>{{ r.occupiedBookings }}</td></tr> }</tbody></table>
+    } @else {
+      <table><thead><tr><th>Date</th><th>Cancellations</th></tr></thead><tbody>@for (r of cancellations(); track r.date) { <tr><td>{{ r.date | date:'mediumDate' }}</td><td>{{ r.cancellations }}</td></tr> }</tbody></table>
+    }
+  </div>
+}

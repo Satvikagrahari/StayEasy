@@ -1,0 +1,37 @@
+.reports-header { display:flex; justify-content:space-between; gap:16px; align-items:center; margin-bottom:18px; }
+.range-controls, .tabs { display:flex; gap:8px; flex-wrap:wrap; }
+.range-controls button, .tabs button {
+  border:0; background:#fff; border-bottom:2px solid transparent; color:var(--neutral-600);
+  cursor:pointer; padding:10px 12px; font-weight:800;
+}
+.range-controls button { border:1.5px solid var(--border); border-radius:30px; }
+.range-controls button.active { border-color:var(--primary); background:var(--primary-50); color:var(--primary); }
+.tabs { margin-bottom:16px; border-bottom:1px solid var(--border); }
+.tabs button.active { color:var(--primary); border-bottom-color:var(--primary); }
+.date-filter { display:flex; gap:12px; align-items:end; margin-bottom:18px; }
+.date-filter label { display:grid; gap:6px; color:var(--neutral-600); font-size:13px; font-weight:700; }
+.date-filter input { padding:10px 12px; border:1.5px solid var(--border); border-radius:var(--radius-md); }
+.active-range { margin-right:auto; display:grid; gap:2px; color:var(--neutral-500); font-size:12px; font-weight:700; }
+.active-range strong { color:var(--neutral-900); font-size:14px; }
+.kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:18px; }
+.kpi-grid b { display:inline-flex; margin-top:8px; padding:2px 8px; border-radius:20px; background:var(--success-light); color:#047857; font-size:12px; }
+.chart-shell { position:relative; height:340px; margin-bottom:18px; }
+.chart-shell canvas { width:100% !important; height:100% !important; }
+.chart-empty {
+  position:absolute;
+  inset:64px 24px 24px;
+  z-index:1;
+  display:grid;
+  place-content:center;
+  gap:6px;
+  border:1px dashed var(--border);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.78);
+  color:var(--neutral-500);
+  text-align:center;
+  pointer-events:none;
+}
+.chart-empty strong { color:var(--neutral-800); font-size:16px; }
+.chart-empty span { font-size:13px; }
+.report-table { padding:0; overflow:hidden; }
+@media (max-width:760px){ .reports-header{align-items:flex-start; flex-direction:column;} .kpi-grid{grid-template-columns:1fr;} .date-filter{align-items:stretch; flex-direction:column;} }

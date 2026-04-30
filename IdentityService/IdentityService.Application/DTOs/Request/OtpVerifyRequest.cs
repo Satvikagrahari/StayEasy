@@ -6,7 +6,7 @@ namespace IdentityService.Application.DTOs.Request
 {
     public class OtpVerifyRequest
     {
-        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
         public string Code { get; set; }
     }
 }

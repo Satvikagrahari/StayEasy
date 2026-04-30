@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
-    <PackageReference Include="Twilio" Version="7.14.3" />
   </ItemGroup>
 
   <ItemGroup>

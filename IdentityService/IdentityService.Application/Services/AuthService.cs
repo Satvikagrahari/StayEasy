@@ -10,10 +10,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text;
-using Twilio;
-using Twilio.Rest.Api.V2010.Account;
-using Twilio.Types;
 
 public class AuthService : IAuthService
 {
@@ -31,23 +27,27 @@ public class AuthService : IAuthService
     public async Task SignupAsync(SignupRequest request)
     {
         var email = request.Email.Trim().ToLowerInvariant();
+        var userName = request.UserName.Trim();
 
         var userExists = await _context.Users
             .AsNoTracking()
-            .AnyAsync(x => x.Email == email);
+            .AnyAsync(x => x.Email == email || x.UserName == userName);
 
         if (userExists)
-            throw new ApplicationException("User already exists");
+            throw new ApplicationException("Email or username already exists");
 
         var user = new User
         {
             Id = Guid.NewGuid(),
+            UserName = userName,
             Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            PhoneNumber = request.PhoneNumber,
+            PhoneNumber = request.PhoneNumber.Trim(),
             Role = "Guest",
-            IsVerified = true,
-            IsActive = true
+            IsVerified = false,
+            IsActive = true,
+            EmailOtpCode = GenerateOtpCode(),
+            EmailOtpExpiryTime = DateTime.UtcNow.AddMinutes(10)
         };
 
         _context.Users.Add(user);
@@ -58,26 +58,17 @@ public class AuthService : IAuthService
         }
         catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
         {
-            // Possible concurrent signup — surface friendly error
-            throw new ApplicationException("User already exists");
+            throw new ApplicationException("Email or username already exists");
         }
-    }
 
-    private bool IsUniqueConstraintViolation(DbUpdateException ex)
-    {
-        // Database-specific detection: inspect inner exception or SQL error code.
-        var msg = ex.InnerException?.Message ?? string.Empty;
-        return msg.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase)
-            || msg.Contains("duplicate", StringComparison.OrdinalIgnoreCase);
+        await _otpService.SendOtpAsync(user.Email, user.EmailOtpCode);
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
         var email = request.Email.Trim().ToLowerInvariant();
 
-        // Fetch user
-        var user = await _context.Users
-            .FirstOrDefaultAsync(x => x.Email == email);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
 
         if (user == null)
             throw new ApplicationException("Invalid email or password");
@@ -85,13 +76,14 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             throw new ApplicationException("User is deactivated");
 
-        // Verify password
+        if (!user.IsVerified)
+            throw new ApplicationException("Please verify your email before logging in");
+
         var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
         if (!isPasswordValid)
             throw new ApplicationException("Invalid email or password");
 
-        // Generate JWT + refresh token
         var token = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken();
 
@@ -103,6 +95,7 @@ public class AuthService : IAuthService
         {
             Token = token,
             RefreshToken = refreshToken,
+            UserName = user.UserName,
             Email = user.Email,
             Role = user.Role
         };
@@ -132,6 +125,7 @@ public class AuthService : IAuthService
         {
             Token = jwt,
             RefreshToken = newRefreshToken,
+            UserName = user.UserName,
             Email = user.Email,
             Role = user.Role
         };
@@ -157,15 +151,7 @@ public class AuthService : IAuthService
         if (user == null)
             throw new ApplicationException("User not found");
 
-        return new UserProfileResponse
-        {
-            Id = user.Id,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber,
-            Role = user.Role,
-            IsVerified = user.IsVerified,
-            IsActive = user.IsActive
-        };
+        return ToProfileResponse(user);
     }
 
     public async Task UpdateProfileAsync(Guid userId, UpdateProfileRequest request)
@@ -174,6 +160,21 @@ public class AuthService : IAuthService
 
         if (user == null)
             throw new ApplicationException("User not found");
+
+        var shouldSendVerificationEmail = false;
+
+        if (!string.IsNullOrWhiteSpace(request.UserName))
+        {
+            var userName = request.UserName.Trim();
+            var userNameExists = await _context.Users
+                .AsNoTracking()
+                .AnyAsync(x => x.UserName == userName && x.Id != userId);
+
+            if (userNameExists)
+                throw new ApplicationException("Username already in use");
+
+            user.UserName = userName;
+        }
 
         if (!string.IsNullOrWhiteSpace(request.Email))
         {
@@ -186,7 +187,14 @@ public class AuthService : IAuthService
             if (emailExists)
                 throw new ApplicationException("Email already in use");
 
-            user.Email = normalizedEmail;
+            if (!string.Equals(user.Email, normalizedEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                user.Email = normalizedEmail;
+                user.IsVerified = false;
+                user.EmailOtpCode = GenerateOtpCode();
+                user.EmailOtpExpiryTime = DateTime.UtcNow.AddMinutes(10);
+                shouldSendVerificationEmail = true;
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
@@ -195,6 +203,11 @@ public class AuthService : IAuthService
         }
 
         await _context.SaveChangesAsync();
+
+        if (shouldSendVerificationEmail && user.EmailOtpCode != null)
+        {
+            await _otpService.SendOtpAsync(user.Email, user.EmailOtpCode);
+        }
     }
 
     public async Task<List<UserProfileResponse>> GetAllUsersAsync()
@@ -204,6 +217,7 @@ public class AuthService : IAuthService
             .Select(user => new UserProfileResponse
             {
                 Id = user.Id,
+                UserName = user.UserName,
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 Role = user.Role,
@@ -224,7 +238,6 @@ public class AuthService : IAuthService
 
         if (!isActive)
         {
-            // Revoke refresh token when deactivating
             user.RefreshToken = null;
             user.RefreshTokenExpiryTime = null;
         }
@@ -244,23 +257,39 @@ public class AuthService : IAuthService
 
     public async Task SendOtpAsync(SendOtpRequest request)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
-        if (user == null) throw new ApplicationException("User not found for this phone number");
-        
-        await _otpService.SendOtpAsync(request.PhoneNumber, request.Channel);
+        var email = request.Email.Trim().ToLowerInvariant();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+        if (user == null)
+            throw new ApplicationException("User not found for this email");
+
+        user.EmailOtpCode = GenerateOtpCode();
+        user.EmailOtpExpiryTime = DateTime.UtcNow.AddMinutes(10);
+        await _context.SaveChangesAsync();
+
+        await _otpService.SendOtpAsync(user.Email, user.EmailOtpCode);
     }
 
     public async Task VerifyOtpAsync(VerifyOtpRequest request)
     {
-        var isValid = await _otpService.VerifyOtpAsync(request.PhoneNumber, request.Code);
-        if (!isValid) throw new ApplicationException("Invalid or expired OTP");
+        var email = request.Email.Trim().ToLowerInvariant();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
-        if (user != null)
+        if (user == null)
+            throw new ApplicationException("User not found for this email");
+
+        if (string.IsNullOrWhiteSpace(user.EmailOtpCode) ||
+            user.EmailOtpExpiryTime == null ||
+            user.EmailOtpExpiryTime < DateTime.UtcNow ||
+            user.EmailOtpCode != request.Code.Trim())
         {
-            user.IsVerified = true;
-            await _context.SaveChangesAsync();
+            throw new ApplicationException("Invalid or expired OTP");
         }
+
+        user.IsVerified = true;
+        user.EmailOtpCode = null;
+        user.EmailOtpExpiryTime = null;
+        await _context.SaveChangesAsync();
     }
 
     private string GenerateJwtToken(User user)
@@ -271,25 +300,46 @@ public class AuthService : IAuthService
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // VERY IMPORTANT
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.UserName),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Role, user.Role)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
         var expiresMinutes = double.Parse(_config["Jwt:ExpiresInMinutes"] ?? "15");
 
         var token = new JwtSecurityToken(
-            issuer: _config["Jwt:Issuer"],
-            audience: _config["Jwt:Audience"],
+            issuer: issuer,
+            audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expiresMinutes), // Reduced lifespan
+            expires: DateTime.UtcNow.AddMinutes(expiresMinutes),
             signingCredentials: creds
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private static UserProfileResponse ToProfileResponse(User user)
+    {
+        return new UserProfileResponse
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            Role = user.Role,
+            IsVerified = user.IsVerified,
+            IsActive = user.IsActive
+        };
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException ex)
+    {
+        var msg = ex.InnerException?.Message ?? string.Empty;
+        return msg.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase)
+            || msg.Contains("duplicate", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string GenerateRefreshToken()
@@ -297,5 +347,10 @@ public class AuthService : IAuthService
         var bytes = new byte[64];
         RandomNumberGenerator.Fill(bytes);
         return Convert.ToBase64String(bytes);
+    }
+
+    private static string GenerateOtpCode()
+    {
+        return RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
     }
 }

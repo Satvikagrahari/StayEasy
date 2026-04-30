@@ -1,0 +1,99 @@
+<div class="admin-page-header">
+  <h1 class="section-title">Manage Hotels</h1>
+  <button class="btn btn-primary" (click)="openCreate()">+ Add Hotel</button>
+</div>
+
+<div class="search-filter card">
+  <div class="search-box"><span>⌕</span><input [(ngModel)]="search" placeholder="Search hotels, city, address" /></div>
+  <div class="toggle-filter">
+    <button [class.active]="statusFilter === 'all'" (click)="statusFilter='all'">All</button>
+    <button [class.active]="statusFilter === 'active'" (click)="statusFilter='active'">Active</button>
+    <button [class.active]="statusFilter === 'inactive'" (click)="statusFilter='inactive'">Inactive</button>
+  </div>
+</div>
+
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (filteredHotels().length === 0) {
+  <div class="empty-state card"><p>No hotels found.</p></div>
+} @else {
+  <div class="hotel-table-card card">
+    <table>
+      <thead><tr><th>Hotel</th><th>Location</th><th>Rating</th><th>Rooms</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (hotel of filteredHotels(); track hotel.hotelId) {
+          <tr>
+            <td><strong>{{ hotel.name }}</strong><span>{{ hotel.address }}</span></td>
+            <td>🇮🇳 {{ hotel.city }}, {{ hotel.country || 'India' }}</td>
+            <td><span class="stars">@for (s of [1,2,3,4,5]; track s) { {{ s <= (hotel.starRating || 0) ? '★' : '☆' }} }</span> {{ hotel.starRating || 0 }}/5</td>
+            <td><span class="badge badge-neutral">{{ hotel.roomTypes.length }} room type{{ hotel.roomTypes.length === 1 ? '' : 's' }}</span></td>
+            <td><span [class]="isActive(hotel) ? 'badge badge-success' : 'badge badge-neutral'">{{ isActive(hotel) ? 'Active' : 'Inactive' }}</span></td>
+            <td class="actions-cell">
+              <button class="icon-btn edit" (click)="openEdit(hotel)" title="Edit">✎</button>
+              <button class="btn btn-ghost btn-sm" (click)="deactivateTarget.set(hotel)" [disabled]="deletingId() === hotel.hotelId">
+                {{ isActive(hotel) ? 'Deactivate' : 'Activate' }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <div class="pagination-row">
+      <span>Showing 1-{{ filteredHotels().length }} of {{ filteredHotels().length }} hotels</span>
+      <div><button class="btn btn-ghost btn-sm" disabled>Prev</button><button class="btn btn-ghost btn-sm" disabled>Next</button></div>
+    </div>
+  </div>
+}
+
+@if (showForm()) {
+  <div class="slide-backdrop" (click)="showForm.set(false)">
+    <aside class="slide-panel" (click)="$event.stopPropagation()">
+      <div class="slide-header">
+        <h2>{{ editingId() ? 'Edit Hotel' : 'Add Hotel' }}</h2>
+        <button type="button" (click)="showForm.set(false)">×</button>
+      </div>
+      <form [formGroup]="hotelForm" (ngSubmit)="save()">
+        <label>Name<input formControlName="name" /></label>
+        <label>Description<textarea rows="4" formControlName="description"></textarea></label>
+        <div class="two-col">
+          <label>Location<input formControlName="city" /></label>
+          <label>Country<input formControlName="country" /></label>
+        </div>
+        <label>Address<input formControlName="address" /></label>
+        <div class="star-selector">
+          <span>Rating</span>
+          @for (s of [1,2,3,4,5]; track s) { <button type="button" [class.active]="s <= ratingValue()" (click)="setRating(s)">★</button> }
+        </div>
+        @if (!editingId()) {
+          <div class="room-note">Starter room fields are captured for planning; create room types from Manage Rooms after the hotel is saved.</div>
+          <label>Room type name<input [(ngModel)]="roomDraft.name" [ngModelOptions]="{standalone:true}" /></label>
+          <label>Room description<textarea rows="3" [(ngModel)]="roomDraft.description" [ngModelOptions]="{standalone:true}"></textarea></label>
+          <div class="three-col">
+            <label>Capacity<input type="number" [(ngModel)]="roomDraft.capacity" [ngModelOptions]="{standalone:true}" /></label>
+            <label>Price<input type="number" [(ngModel)]="roomDraft.price" [ngModelOptions]="{standalone:true}" /></label>
+            <label>Availability<input type="number" [(ngModel)]="roomDraft.availability" [ngModelOptions]="{standalone:true}" /></label>
+          </div>
+        }
+        <div class="slide-actions">
+          <button type="button" class="btn btn-ghost" (click)="showForm.set(false)">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save Changes' }}</button>
+        </div>
+      </form>
+    </aside>
+  </div>
+}
+
+@if (deactivateTarget(); as hotel) {
+  <div class="modal-backdrop">
+    <div class="confirm-modal card">
+      <h2>{{ isActive(hotel) ? 'Deactivate' : 'Activate' }} {{ hotel.name }}?</h2>
+      <p>This will update the hotel availability shown to guests.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="deactivateTarget.set(null)">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmDeactivate()">{{ isActive(hotel) ? 'Deactivate' : 'Activate' }}</button>
+      </div>
+    </div>
+  </div>
+}

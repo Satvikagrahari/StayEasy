@@ -1,0 +1,92 @@
+.trips-header { margin-bottom: 18px; }
+.trips-header p { color: var(--neutral-500); }
+.trip-tabs {
+  display: flex;
+  gap: 28px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.trip-tabs button {
+  position: relative;
+  padding: 12px 0;
+  border: 0;
+  background: transparent;
+  color: var(--neutral-500);
+  cursor: pointer;
+  font-weight: 800;
+}
+.trip-tabs button.active { color: var(--primary); }
+.trip-tabs button.active::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: var(--primary);
+  animation: fadeInUp .18s ease;
+}
+.booking-list { display: grid; gap: 16px; }
+.booking-card {
+  position: relative;
+  overflow: hidden;
+  padding-left: 28px;
+}
+.accent {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+}
+.status-confirmed .accent { background: var(--success); }
+.status-pending .accent { background: var(--warning); }
+.status-cancelled .accent { background: var(--danger); }
+.status-refunded .accent { background: var(--primary); }
+.booking-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.booking-top h3 { margin-bottom: 6px; font-size: 17px; font-weight: 800; }
+.trip-line { color: var(--neutral-600); font-size: 14px; }
+.amount-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  color: var(--primary);
+  font-size: 18px;
+}
+.booking-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0,0,0,.5);
+}
+.confirm-modal {
+  max-width: 440px;
+  width: 100%;
+  animation: bounceIn .2s ease;
+}
+.confirm-modal h2 { font-size: 22px; font-weight: 800; }
+.confirm-modal p { margin: 10px 0 20px; color: var(--neutral-600); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.skeleton-card span {
+  display: block;
+  height: 16px;
+  margin: 12px 0;
+  border-radius: 20px;
+  background: var(--neutral-100);
+}
+@media (max-width: 620px) {
+  .booking-top, .booking-actions { flex-direction: column; align-items: flex-start; }
+  .amount-row { justify-content: flex-start; }
+}

@@ -1,0 +1,77 @@
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (!cart() || cart()!.items.length === 0) {
+  <div class="empty-cart card">
+    <div>🛒</div>
+    <h2>Your cart is empty</h2>
+    <p>Start exploring hotels and add your favorite rooms.</p>
+    <a routerLink="/hotels" class="btn btn-primary empty-action">Browse Hotels</a>
+  </div>
+} @else {
+  <div class="cart-layout">
+    <section class="cart-items">
+      <div class="cart-header">
+        <h1>Your Cart</h1>
+        <span>({{ cart()!.items.length }} {{ cart()!.items.length === 1 ? 'item' : 'items' }})</span>
+      </div>
+
+      @if (detailsLoading()) {
+        <div class="cart-item-card skeleton-detail"><span></span><span></span><span></span></div>
+      }
+
+      @for (item of cart()!.items; track item.cartItemId) {
+        <article class="cart-item-card">
+          <div class="accent"></div>
+          <div class="item-top">
+            <div>
+              <h3>{{ hotelName(item) }}</h3>
+              <span class="badge badge-info">{{ roomName(item) }}</span>
+            </div>
+            <button class="remove-btn" (click)="removeItem(item.cartItemId)" [disabled]="removing() === item.cartItemId">
+              🗑 {{ removing() === item.cartItemId ? 'Removing...' : 'Remove' }}
+            </button>
+          </div>
+          <p class="item-line">📍 {{ location(item) }}</p>
+          <p class="item-line">📅 {{ item.checkInDate | date:'mediumDate' }} – {{ item.checkOutDate | date:'mediumDate' }} · {{ nights(item) }} nights</p>
+          <p class="item-line">👥 {{ item.guests }} {{ item.guests === 1 ? 'guest' : 'guests' }}</p>
+          <div class="item-price-row">
+            <span>{{ item.priceSnapshot | currency:'INR':'symbol':'1.0-0' }}/night × {{ nights(item) }} nights</span>
+            <strong>{{ subtotal(item) | currency:'INR':'symbol':'1.0-0' }}</strong>
+          </div>
+        </article>
+      }
+    </section>
+
+    <aside class="summary-card card">
+      <h2>Order Summary</h2>
+      <div class="summary-lines">
+        @for (item of cart()!.items; track item.cartItemId) {
+          <p><span>{{ hotelName(item) }}</span><strong>{{ subtotal(item) | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+        }
+      </div>
+      <div class="summary-divider"></div>
+      <p><span>Subtotal</span><strong>{{ total() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+      <p><span>Taxes & fees (09%)</span><strong>{{ taxes() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+      @if (promoApplied()) {
+        <p class="discount-line"><span>Promotional discount <em>STAYEASY15</em></span><strong>-{{ discount() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+      }
+      <div class="promo-row">
+        <input [(ngModel)]="promoCode" placeholder="STAYEASY15" />
+        <button type="button" (click)="applyPromo()">Apply</button>
+      </div>
+      @if (promoError()) { <div class="promo-error">{{ promoError() }}</div> }
+      @if (promoApplied()) { <div class="promo-success">15% discount applied</div> }
+      <div class="summary-divider"></div>
+      <p class="grand-total"><span>Total</span><strong>{{ grandTotal() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+      <a routerLink="/checkout" class="btn btn-primary btn-lg full-width">Proceed to Checkout</a>
+      <a routerLink="/hotels" class="continue-link">Continue Shopping</a>
+      <div class="summary-trust">
+        <span>🔒 256-bit SSL</span>
+        <span>✓ Best Price</span>
+        <span>📞 Support</span>
+      </div>
+    </aside>
+  </div>
+}

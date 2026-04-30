@@ -1,0 +1,43 @@
+@if (isAdminRoute()) {
+  <div class="admin-shell">
+    <app-navbar [adminMode]="true" [adminMobileOpen]="adminSidebarOpen()"></app-navbar>
+    @if (adminSidebarOpen()) {
+      <div class="admin-mobile-backdrop" (click)="adminSidebarOpen.set(false)"></div>
+    }
+    <section class="admin-content">
+      <header class="admin-topbar">
+        <div>
+          <button type="button" class="admin-menu-button" (click)="adminSidebarOpen.set(true)">☰</button>
+          <span class="admin-eyebrow">StayEasy Operations</span>
+          <h1>{{ pageTitle() }}</h1>
+        </div>
+        <div class="admin-topbar-right">
+          <button type="button" class="notification-bell" aria-label="Notifications">🔔</button>
+          @if (currentUser$ | async; as user) {
+            <span>{{ user.username || 'Admin' }}</span>
+          }
+        </div>
+      </header>
+      <main class="admin-main page-enter" [@pageTransition]="routeKey(adminOutlet)">
+        <router-outlet #adminOutlet="outlet" />
+      </main>
+    </section>
+  </div>
+} @else {
+  @if (!isAuthRoute() && showPromo()) {
+    <div class="promo-banner">
+      <span>🎉 Limited time: Get 15% off your first booking with code STAYEASY15</span>
+      <button type="button" aria-label="Dismiss promotion" (click)="dismissPromo()">×</button>
+    </div>
+  }
+  @if (!isAuthRoute()) {
+    <app-navbar></app-navbar>
+  }
+  <main class="page-enter" [class.container]="!isAuthRoute()" [@pageTransition]="routeKey(userOutlet)">
+    <router-outlet #userOutlet="outlet" />
+  </main>
+  @if (!isAuthRoute()) {
+    <app-footer></app-footer>
+  }
+}
+<app-toast></app-toast>

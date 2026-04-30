@@ -1,0 +1,10 @@
+<div class="toast-container">
+  @for (toast of toastService.toasts$ | async; track toast.id) {
+    <div class="toast toast-{{ toast.type }}">
+      <div class="toast-icon">{{ iconFor(toast.type) }}</div>
+      <p class="toast-message">{{ toast.message }}</p>
+      <button class="toast-close" type="button" aria-label="Dismiss notification" (click)="toastService.dismiss(toast.id)">×</button>
+      <span class="toast-progress" [style.animation-duration.ms]="toast.duration || 4000"></span>
+    </div>
+  }
+</div>

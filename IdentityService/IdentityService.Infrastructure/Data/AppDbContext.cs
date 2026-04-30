@@ -11,7 +11,7 @@ namespace IdentityService.Infrastructure.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<Otp> Otps { get; set; }
+       
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -20,9 +20,18 @@ namespace IdentityService.Infrastructure.Data
                 .IsUnique();
 
             modelBuilder.Entity<User>()
+                .HasIndex(u => u.UserName)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
                 .Property(u => u.Email)
                 .IsRequired()
                 .HasMaxLength(256);
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.UserName)
+                .IsRequired()
+                .HasMaxLength(80);
         }
     }
 }

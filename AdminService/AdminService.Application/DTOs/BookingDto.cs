@@ -24,4 +24,22 @@ namespace AdminService.Application.DTOs
         public decimal PricePerNight { get; set; }
         public decimal Subtotal { get; set; }
     }
+
+    public class BookingTrendDto
+    {
+        public string Date { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
+
+    public class RevenueTrendDto
+    {
+        public string Month { get; set; } = string.Empty;
+        public decimal Revenue { get; set; }
+    }
+
+    public class BookingStatusDistributionDto
+    {
+        public string Status { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
 }

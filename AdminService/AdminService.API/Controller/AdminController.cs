@@ -1,6 +1,7 @@
 using AdminService.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -53,6 +54,13 @@ namespace AdminService.API.Controller
         }
 
         [Authorize(Roles = "Admin")]
+        [HttpGet("dashboard/stats")]
+        public async Task<IActionResult> GetDashboardStats()
+        {
+            return await GetDashboardSummary();
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpGet("bookings")]
         public async Task<IActionResult> GetAllBookings(
             [FromQuery] string? status = null,
@@ -98,6 +106,84 @@ namespace AdminService.API.Controller
             var result = bookings
                 .OrderByDescending(x => x.BookingDate)
                 .Take(take)
+                .ToList();
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("bookings/trends")]
+        public async Task<IActionResult> GetBookingTrends([FromQuery] int days = 7)
+        {
+            if (days <= 0) days = 7;
+
+            var from = DateTime.UtcNow.Date.AddDays(-(days - 1));
+            var bookings = await FetchBookingsAsync();
+
+            var grouped = bookings
+                .Where(x => x.BookingDate.Date >= from)
+                .GroupBy(x => x.BookingDate.Date)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var result = Enumerable.Range(0, days)
+                .Select(offset => from.AddDays(offset))
+                .Select(date => new BookingTrendDto
+                {
+                    Date = date.ToString("yyyy-MM-dd"),
+                    Count = grouped.GetValueOrDefault(date, 0)
+                })
+                .ToList();
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("revenue/trends")]
+        public async Task<IActionResult> GetRevenueTrends([FromQuery] int months = 12)
+        {
+            if (months <= 0) months = 12;
+
+            var currentMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+            var from = currentMonth.AddMonths(-(months - 1));
+            var bookings = await FetchBookingsAsync();
+
+            var grouped = bookings
+                .Where(x =>
+                    x.Status.Equals("Confirmed", StringComparison.OrdinalIgnoreCase) &&
+                    x.BookingDate.Date >= from)
+                .GroupBy(x => new DateTime(x.BookingDate.Year, x.BookingDate.Month, 1))
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.TotalAmount));
+
+            var result = Enumerable.Range(0, months)
+                .Select(offset => from.AddMonths(offset))
+                .Select(month => new RevenueTrendDto
+                {
+                    Month = month.ToString("MMM", CultureInfo.InvariantCulture),
+                    Revenue = grouped.GetValueOrDefault(month, 0)
+                })
+                .ToList();
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("bookings/status-distribution")]
+        public async Task<IActionResult> GetBookingStatusDistribution()
+        {
+            var bookings = await FetchBookingsAsync();
+
+            var grouped = bookings
+                .GroupBy(x => x.Status)
+                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+
+            var statuses = new[] { "Pending", "Confirmed", "Cancelled", "Failed" };
+
+            var result = statuses
+                .Select(status => new BookingStatusDistributionDto
+                {
+                    Status = status,
+                    Count = grouped.GetValueOrDefault(status, 0)
+                })
                 .ToList();
 
             return Ok(result);
@@ -244,35 +330,15 @@ namespace AdminService.API.Controller
 
         private async Task<List<BookingDto>> FetchBookingsAsync()
         {
-            // Tries all available booking endpoints and merges results by Id.
-            var urls = new[]
+            using var request = CreateAuthorizedRequest(HttpMethod.Get, $"{BookingBaseUrl}/api/booking/all");
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
             {
-                $"{BookingBaseUrl}/api/booking",
-                $"{BookingBaseUrl}/api/booking/pending",
-                $"{BookingBaseUrl}/api/booking/confirmed"
-            };
-
-            var merged = new Dictionary<Guid, BookingDto>();
-
-            foreach (var url in urls)
-            {
-                using var request = CreateAuthorizedRequest(HttpMethod.Get, url);
-                var response = await _httpClient.SendAsync(request);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    continue;
-                }
-
-                var data = await response.Content.ReadFromJsonAsync<List<BookingDto>>(JsonOptions) ?? new List<BookingDto>();
-
-                foreach (var item in data)
-                {
-                    merged[item.Id] = item;
-                }
+                return new List<BookingDto>();
             }
 
-            return merged.Values.ToList();
+            return await response.Content.ReadFromJsonAsync<List<BookingDto>>(JsonOptions) ?? new List<BookingDto>();
         }
 
         

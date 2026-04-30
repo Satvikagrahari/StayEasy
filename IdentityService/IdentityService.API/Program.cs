@@ -8,7 +8,6 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using IdentityService.Application.Services;
 using Serilog;
-using Twilio;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,13 +23,19 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // DI
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IOtpService, TwilioOtpService>();
+builder.Services.AddScoped<IOtpService, SmtpOtpService>();
 
-// Twilio Setup
-TwilioClient.Init(
-    builder.Configuration["Twilio:AccountSid"],
-    builder.Configuration["Twilio:AuthToken"]
-);
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Often needed for auth
+    });
+});
 
 // JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -123,6 +128,7 @@ using (var scope = app.Services.CreateScope())
         admin = new User
         {
             Id = Guid.NewGuid(),
+            UserName = "admin",
             Email = "admin@stayeasy.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
             PhoneNumber = "9125219430",
@@ -135,6 +141,7 @@ using (var scope = app.Services.CreateScope())
     }
     else
     {
+        admin.UserName = string.IsNullOrWhiteSpace(admin.UserName) ? "admin" : admin.UserName;
         admin.Role = "Admin";
         admin.IsActive = true;
         admin.IsVerified = true;
@@ -150,6 +157,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

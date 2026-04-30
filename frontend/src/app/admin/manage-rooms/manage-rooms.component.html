@@ -1,0 +1,97 @@
+<div class="page-header">
+  <h2>Manage Room Types</h2>
+</div>
+
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else {
+  <div class="form-group hotel-picker">
+    <label>Select Hotel</label>
+    <select class="form-control" (change)="selectHotelId($any($event.target).value)">
+      <option value="">Choose a hotel</option>
+      @for (hotel of hotels(); track hotel.hotelId) {
+        <option [value]="hotel.hotelId">{{ hotel.name }} - {{ hotel.city }}</option>
+      }
+    </select>
+  </div>
+
+  @if (selectedHotel(); as hotel) {
+    <div class="page-header">
+      <h3>{{ hotel.name }} Rooms</h3>
+      <button class="btn btn-primary" (click)="openCreate()">Add Room Type</button>
+    </div>
+
+    @if (showForm()) {
+      <div class="form-panel">
+        <h3>{{ editingId() ? 'Edit Room Type' : 'New Room Type' }}</h3>
+        <form [formGroup]="roomForm" (ngSubmit)="save()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Type</label>
+              <input class="form-control" formControlName="type" />
+            </div>
+            <div class="form-group">
+              <label>Max Guests</label>
+              <input type="number" class="form-control" formControlName="maxGuests" />
+            </div>
+            <div class="form-group">
+              <label>Price per Night</label>
+              <input type="number" class="form-control" formControlName="pricePerNight" />
+            </div>
+            <div class="form-group">
+              <label>Total Rooms</label>
+              <input type="number" class="form-control" formControlName="totalRooms" />
+            </div>
+            <div class="form-group">
+              <label>Available Rooms</label>
+              <input type="number" class="form-control" formControlName="availableRooms" />
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select class="form-control" formControlName="status">
+                <option>Active</option>
+                <option>Inactive</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-control" rows="3" formControlName="description"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save' }}</button>
+            <button type="button" class="btn btn-secondary" (click)="showForm.set(false)">Cancel</button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (hotel.roomTypes.length === 0) {
+      <div class="empty-state card"><p>No room types yet.</p></div>
+    } @else {
+      <div class="table-wrapper card">
+        <table>
+          <thead>
+            <tr><th>Type</th><th>Guests</th><th>Price/Night</th><th>Total</th><th>Available</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            @for (room of hotel.roomTypes; track room.roomTypeId) {
+              <tr>
+                <td>
+                  <strong>{{ room.name }}</strong>
+                  <div class="muted">{{ room.description }}</div>
+                </td>
+                <td>{{ room.maxGuests }}</td>
+                <td>{{ room.pricePerNight | currency:'INR':'symbol':'1.0-0' }}</td>
+                <td>{{ room.totalRooms }}</td>
+                <td>{{ room.availableRooms }}</td>
+                <td><span [class]="room.status === 'Inactive' ? 'badge badge-danger' : 'badge badge-success'">{{ room.status || 'Active' }}</span></td>
+                <td><button class="btn btn-secondary btn-sm" (click)="openEdit(room)">Edit</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+}

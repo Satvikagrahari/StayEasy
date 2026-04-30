@@ -28,6 +28,7 @@ builder.Services.AddHttpClient<ICartService, CartService>();
 // ================= Email + Identity HTTP Client =================
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpClient<IIdentityClient, IdentityHttpClient>();
+builder.Services.AddHttpClient<ICatalogClient, CatalogHttpClient>();
 
 // ================= JWT Configuration =================
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -108,6 +109,18 @@ builder.Services.AddSingleton<IBookingPublisher, RabbitMQPublisher>();
 builder.Services.AddHostedService<RabbitMQConsumerService>();
 builder.Services.AddHostedService<BookingService.Infrastructure.BackgroundServices.BookingCompletionWorker>();
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Often needed for auth
+    });
+});
+
 // ================= Build Application =================
 var app = builder.Build();
 
@@ -124,7 +137,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseCors("AllowFrontend");
 app.MapControllers();
 
 // ================= Run Application =================

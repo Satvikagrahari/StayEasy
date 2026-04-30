@@ -76,7 +76,7 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/auth/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
       "SwaggerKey": "identity"
     },
     {
@@ -89,7 +89,7 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/users/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
       "SwaggerKey": "identity"
     },
     {
@@ -102,7 +102,7 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/admin/users/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
       "SwaggerKey": "identity"
     },
     {
@@ -115,7 +115,7 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/catalog/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
       "SwaggerKey": "catalog"
     },
     {
@@ -128,7 +128,7 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/booking/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
       "SwaggerKey": "booking"
     },
     {
@@ -141,7 +141,7 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/cart/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
       "SwaggerKey": "booking"
     },
     {
@@ -154,7 +154,7 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/admin/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
       "SwaggerKey": "admin"
     }
   ],

@@ -10,5 +10,11 @@ namespace BookingService.Application.Interfaces.Services
         /// Returns null if the user is not found or the call fails.
         /// </summary>
         Task<string?> GetUserEmailAsync(Guid userId);
+
+        /// <summary>
+        /// Fetches the username for a given userId from the IdentityService.
+        /// Returns null if the user is not found or the call fails.
+        /// </summary>
+        Task<string?> GetUserNameAsync(Guid userId);
     }
 }

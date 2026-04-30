@@ -61,14 +61,21 @@ namespace CatalogService.Application.Services
                 HotelId = h.HotelId,
                 Name = h.Name,
                 City = h.City,
+                Country = h.Country,
+                Address = h.Address,
+                Description = h.Description,
+                StarRating = h.StarRating,
 
                 RoomTypes = h.RoomTypes.Select(r => new RoomTypeDto
                 {
                     RoomTypeId = r.RoomTypeId,
                     Name = r.Type,
+                    Description = r.Description,
+                    MaxGuests = r.MaxGuests,
                     PricePerNight = r.PricePerNight,
                     TotalRooms = r.TotalRooms,
-                    AvailableRooms = r.AvailableRooms
+                    AvailableRooms = r.AvailableRooms,
+                    Status = r.Status
                 }).ToList()
             }).ToList();
         }
@@ -92,15 +99,36 @@ namespace CatalogService.Application.Services
         }
 
 
-        public async Task<Hotel> GetHotelByIdAsync(Guid id)
+        public async Task<HotelResponseDto> GetHotelByIdAsync(Guid id)
         {
             var hotel = await _context.Hotels
+                .Include(h => h.RoomTypes)
                 .FirstOrDefaultAsync(h => h.HotelId == id && h.IsActive);
 
             if (hotel == null)
                 throw new ApplicationException("Hotel not found");
 
-            return hotel;
+            return new HotelResponseDto
+            {
+                HotelId = hotel.HotelId,
+                Name = hotel.Name,
+                City = hotel.City,
+                Country = hotel.Country,
+                Address = hotel.Address,
+                Description = hotel.Description,
+                StarRating = hotel.StarRating,
+                RoomTypes = hotel.RoomTypes.Select(r => new RoomTypeDto
+                {
+                    RoomTypeId = r.RoomTypeId,
+                    Name = r.Type,
+                    Description = r.Description,
+                    MaxGuests = r.MaxGuests,
+                    PricePerNight = r.PricePerNight,
+                    TotalRooms = r.TotalRooms,
+                    AvailableRooms = r.AvailableRooms,
+                    Status = r.Status
+                }).ToList()
+            };
         }
 
         public async Task<RoomTypeDto> GetRoomByIdAsync(Guid roomTypeId)
@@ -115,9 +143,12 @@ namespace CatalogService.Application.Services
             {
                 RoomTypeId = room.RoomTypeId,
                 Name = room.Type, // or Name depending on your entity
+                Description = room.Description,
+                MaxGuests = room.MaxGuests,
                 PricePerNight = room.PricePerNight,
                 TotalRooms = room.TotalRooms,
-                AvailableRooms = room.AvailableRooms
+                AvailableRooms = room.AvailableRooms,
+                Status = room.Status
             };
         }
 

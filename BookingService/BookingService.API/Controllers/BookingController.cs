@@ -31,6 +31,14 @@ namespace BookingService.API.Controllers
         //}
 
         [Authorize(Roles = "Admin")]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllBookings()
+        {
+            var bookings = await _bookingService.GetAllBookingsAsync();
+            return Ok(bookings);
+        }
+
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetMyBookings()
         {

@@ -1,14 +1,13 @@
-    namespace IdentityService.Application.DTOs.Request
+namespace IdentityService.Application.DTOs.Request
 {
     public class SendOtpRequest
     {
-        public string PhoneNumber { get; set; }
-        public string Channel { get; set; } = "sms"; // "sms" or "whatsapp"
+        public string Email { get; set; }
     }
 
     public class VerifyOtpRequest
     {
-        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
         public string Code { get; set; }
     }
 }

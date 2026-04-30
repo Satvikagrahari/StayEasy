@@ -16,7 +16,7 @@ namespace CatalogService.Application.Interfaces.Services
 
         Task AddRoomTypeAsync(CreateRoomTypeRequest request);
 
-        Task<Hotel> GetHotelByIdAsync(Guid id);
+        Task<HotelResponseDto> GetHotelByIdAsync(Guid id);
         Task<RoomTypeDto> GetRoomByIdAsync(Guid roomTypeId);
 
         Task<bool> UpdateHotelAsync(Guid id, UpdateHotelRequest request);

@@ -1,0 +1,67 @@
+<div class="auth-shell">
+  <aside class="auth-left register-left">
+    <div class="brand-mark">🏨 StayEasy</div>
+    <div class="destination-stack">
+      <div>🏖️ Goa escapes</div>
+      <div>🏰 Jaipur palaces</div>
+      <div>🏔️ Manali retreats</div>
+    </div>
+    <h2>Join 50,000+ happy travelers</h2>
+    <p>Create an account once, then book your next stay in a few confident clicks.</p>
+  </aside>
+
+  <main class="auth-right">
+    <div class="auth-form-wrap">
+      <a routerLink="/" class="auth-logo">🏨 StayEasy</a>
+      <h1>Create your account</h1>
+      <p class="auth-subtitle">Start saving hotels, bookings, and exclusive deals.</p>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <label class="input-wrap" [class.invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+          <span>✉</span><input type="email" formControlName="email" placeholder="Email address" />
+        </label>
+        @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) { <div class="error-message">Enter a valid email address.</div> }
+
+        <label class="input-wrap" [class.invalid]="registerForm.get('userName')?.invalid && registerForm.get('userName')?.touched">
+          <span>👤</span><input type="text" formControlName="userName" placeholder="Username" />
+        </label>
+
+        <label class="input-wrap" [class.invalid]="registerForm.get('phoneNumber')?.invalid && registerForm.get('phoneNumber')?.touched">
+          <span>☎</span><input type="tel" formControlName="phoneNumber" placeholder="Phone number" />
+        </label>
+        <div class="hint">Use 10 to 15 digits, without spaces.</div>
+
+        <label class="input-wrap" [class.invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+          <span>🔒</span><input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Password" />
+          <button type="button" (click)="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
+        </label>
+        <div class="strength" [class.s1]="passwordStrength().score === 1" [class.s2]="passwordStrength().score === 2" [class.s3]="passwordStrength().score === 3" [class.s4]="passwordStrength().score === 4">
+          <div><span></span><span></span><span></span><span></span></div>
+          <p>Password strength: {{ passwordStrength().label }}</p>
+        </div>
+
+        <label class="input-wrap" [class.invalid]="passwordMismatch">
+          <span>🔐</span><input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirm password" />
+          <button type="button" (click)="showConfirmPassword = !showConfirmPassword">{{ showConfirmPassword ? 'Hide' : 'Show' }}</button>
+          @if (registerForm.get('confirmPassword')?.value) {
+            <em [class.match]="!passwordMismatch">{{ passwordMismatch ? '✕' : '✓' }}</em>
+          }
+        </label>
+        @if (passwordMismatch) { <div class="error-message">Passwords do not match.</div> }
+
+        <label class="terms-row">
+          <input type="checkbox" [checked]="termsAccepted" (change)="termsAccepted = $any($event.target).checked" />
+          <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+        </label>
+
+        @if (errorMessage) { <div class="error-alert">{{ errorMessage }}</div> }
+
+        <button type="submit" class="btn btn-primary btn-lg full-width" [disabled]="isLoading || registerForm.invalid || !termsAccepted">
+          @if (isLoading) { <span class="spinner"></span> } @else { Create Account }
+        </button>
+
+        <p class="auth-footer">Already have an account? <a routerLink="/login">Log in →</a></p>
+      </form>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,77 @@
+<div class="page-header">
+  <h2 class="section-title">Manage Bookings</h2>
+</div>
+
+<div class="card filters">
+  <div class="filters-grid">
+    <label>Status<select [(ngModel)]="filterStatus"><option value="">All</option><option>Confirmed</option><option>Pending</option><option>Cancelled</option><option>Refunded</option><option>Failed</option><option>RefundRequested</option></select></label>
+    <label>From date<input type="date" [(ngModel)]="filterStart" /></label>
+    <label>To date<input type="date" [(ngModel)]="filterEnd" /></label>
+    <label>Search<input [(ngModel)]="search" placeholder="Booking or guest id" /></label>
+    <div class="filter-actions"><button class="btn btn-primary btn-sm" (click)="load()">Apply</button><button class="btn btn-ghost btn-sm" (click)="clear()">Clear</button></div>
+  </div>
+</div>
+
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (paged().length === 0) {
+  <div class="empty-state card"><p>No bookings found.</p></div>
+} @else {
+  <div class="bookings-table card">
+    <table>
+      <thead><tr><th>ID</th><th>Guest</th><th>Hotel & Room</th><th>Check-in</th><th>Nights</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (b of paged(); track b.id; let even = $even) {
+          <tr [class.even]="even">
+            <td><code>{{ b.id.slice(0, 8) }}...</code></td>
+            <td><div class="guest-cell"><span>{{ initials(b) }}</span><div><strong>{{ guestName(b) }}</strong><small>{{ b.userId.slice(0, 10) }}...</small></div></div></td>
+            <td><strong>{{ hotelLabel(b) }}</strong><small>{{ roomLabel(b) }}</small></td>
+            <td>{{ checkIn(b) | date:'MMM d, y' }}</td>
+            <td>{{ nights(b) }}</td>
+            <td>{{ b.totalAmount | currency:'INR':'symbol':'1.0-0' }}</td>
+            <td><span [class]="statusBadge(b.status)">{{ b.status }}</span></td>
+            <td class="actions-cell">
+              <button class="icon-btn" (click)="selected.set(b)" title="View">👁</button>
+              @if (b.status === 'Pending') {
+                <button class="btn btn-primary btn-sm" (click)="updateStatus(b.id, 'Confirmed')" [disabled]="actionId() === b.id">Confirm</button>
+              }
+              @if (b.status === 'RefundRequested') {
+                <button class="btn btn-primary btn-sm" (click)="approveRefund(b.id)" [disabled]="actionId() === b.id">Refund</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <div class="pagination">
+      @for (p of pages(); track p) { <button [class.active]="page() === p" (click)="page.set(p)">{{ p }}</button> }
+    </div>
+  </div>
+}
+
+@if (selected(); as b) {
+  <div class="modal-backdrop">
+    <div class="booking-modal card">
+      <button class="modal-close" (click)="selected.set(null)">×</button>
+      <h2>Booking Details</h2>
+      <div class="detail-grid">
+        <p><span>Booking ID</span><strong>{{ b.id }}</strong></p>
+        <p><span>User ID</span><strong>{{ b.userId }}</strong></p>
+        <p><span>Date</span><strong>{{ b.bookingDate | date:'medium' }}</strong></p>
+        <p><span>Status</span><strong>{{ b.status }}</strong></p>
+        <p><span>Total</span><strong>{{ b.totalAmount | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+        <p><span>Nights</span><strong>{{ nights(b) }}</strong></p>
+      </div>
+      <h3>Items</h3>
+      @for (item of b.bookingItems; track item.bookingItemId) {
+        <div class="item-detail">
+          <code>{{ item.bookingItemId }}</code>
+          <p>Hotel: {{ item.hotelId }} · Room: {{ item.roomTypeId }}</p>
+          <p>{{ item.checkInDate | date:'mediumDate' }} to {{ item.checkOutDate | date:'mediumDate' }} · {{ item.subtotal | currency:'INR':'symbol':'1.0-0' }}</p>
+        </div>
+      }
+    </div>
+  </div>
+}

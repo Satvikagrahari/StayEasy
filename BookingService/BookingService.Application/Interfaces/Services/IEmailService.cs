@@ -5,6 +5,12 @@ namespace BookingService.Application.Interfaces.Services
 {
     public interface IEmailService
     {
-        Task SendBookingConfirmationAsync(string toEmail, Guid bookingId, decimal totalAmount, DateTime bookingDate);
+        Task SendBookingConfirmationAsync(
+            string toEmail,
+            string userName,
+            string hotelName,
+            Guid bookingId,
+            decimal billAmount,
+            DateTime bookingDate);
     }
 }

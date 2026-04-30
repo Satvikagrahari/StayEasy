@@ -1,0 +1,147 @@
+@if (isLoading()) {
+  <div class="loading-center"><div class="spinner"></div></div>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else {
+@if (hotel(); as h) {
+  <div class="detail-page">
+    <section class="detail-header">
+      <div>
+        <div class="breadcrumb"><a routerLink="/hotels">Hotels</a> / {{ h.city }} / {{ h.name }}</div>
+        <h1>{{ h.name }}</h1>
+        <div class="header-meta">
+          <span>⭐ @for (star of [1,2,3,4,5]; track star) { {{ star <= rating() ? '★' : '☆' }} }</span>
+          <span>📍 {{ h.address || (h.city + ', ' + h.country) }}</span>
+          <span class="score-badge">{{ rating() }}/5 stars</span>
+        </div>
+        <p class="viewing-line">👁️ <strong [class.pulse-number]="viewingPulse()">{{ viewingNow() }}</strong> people are viewing this property right now</p>
+        <p class="last-booked">Last booked {{ lastBookedHours() }} hours ago</p>
+        @if (lowAvailability(); as left) { <span class="detail-left-badge">🔴 Only {{ left }} left!</span> }
+      </div>
+      <a routerLink="/hotels" class="btn header-back">Back to Catalog</a>
+    </section>
+
+    <section class="gallery-section">
+      <div class="gallery-grid">
+        <div class="gallery-slot large" [class]="gradientClass()"><strong>{{ hotelInitials() }}</strong></div>
+        @for (i of [1,2,3,4]; track i) {
+          <div class="gallery-slot" [class]="gradientClass()"><strong>{{ hotelInitials() }}</strong></div>
+        }
+        <button type="button">View all photos</button>
+      </div>
+    </section>
+
+    <div class="detail-layout">
+      <main class="detail-main">
+        <section class="card content-card">
+          <h2>About this hotel</h2>
+          <p>{{ h.description || 'A comfortable StayEasy hotel with curated rooms, flexible stays, and everything you need for a smooth trip.' }}</p>
+        </section>
+
+        <section class="card content-card">
+          <h2>What's included</h2>
+          <div class="amenity-grid">
+            @for (amenity of amenities(); track amenity) {
+              <div>{{ amenity }}</div>
+            }
+          </div>
+        </section>
+
+        <section class="card content-card">
+          <h2>Where you'll be</h2>
+          <p class="map-address">📍 {{ h.address || (h.city + ', ' + h.country) }}</p>
+          <div class="map-box">🗺️ {{ h.address || (h.city + ', ' + (h.country || 'India')) }}</div>
+        </section>
+
+        <section class="card content-card">
+          <h2>Guest Reviews</h2>
+          <div class="review-summary">
+            <strong>{{ rating() }}.0<span>/5</span></strong>
+            <div>
+              <div class="stars">@for (star of [1,2,3,4,5]; track star) { <span [class.empty]="star > rating()">{{ star <= rating() ? '★' : '☆' }}</span> }</div>
+              <p>Based on recent StayEasy guest feedback</p>
+            </div>
+          </div>
+          <div class="rating-bars">
+            @for (row of [88,64,28,12,5]; track row; let idx = $index) {
+              <div><span>{{ 5 - idx }}★</span><b><i [style.width.%]="row"></i></b></div>
+            }
+          </div>
+          <div class="reviews">
+            <article>
+              <span>AR</span>
+              <div><strong>Aarav Rao</strong><small>April 2026 · ★★★★☆</small><p>Clean rooms, helpful staff, and a location that made the whole trip effortless.</p></div>
+            </article>
+            <article>
+              <span>NM</span>
+              <div><strong>Nisha Mehta</strong><small>March 2026 · ★★★★★</small><p>The booking flow was smooth and the hotel matched what we expected. Would stay again.</p></div>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <aside class="booking-panel card" #bookingPanel>
+        <h2>Book this room</h2>
+        <div class="room-picker">
+          @for (room of h.roomTypes; track room.roomTypeId) {
+            <button type="button" [class.selected]="selectedRoom()?.roomTypeId === room.roomTypeId" (click)="selectRoom(room)" [disabled]="room.availableRooms <= 0 || room.status === 'Inactive'">
+              <strong>{{ room.name }}</strong>
+              <span>👥 Up to {{ room.maxGuests || 1 }} · {{ room.pricePerNight | currency:'INR':'symbol':'1.0-0' }}</span>
+              <em [class.soldout]="room.availableRooms <= 0">{{ room.availableRooms > 0 ? room.availableRooms + ' rooms left' : 'Sold out' }}</em>
+              @if (roomLowAvailability(room)) { <small class="room-left-badge">🔴 Only {{ room.availableRooms }} left!</small> }
+            </button>
+          }
+        </div>
+
+        <form [formGroup]="cartForm" (ngSubmit)="addToCart()">
+          <div class="date-row">
+            <label><span>Check-in</span><input type="date" formControlName="checkInDate" [min]="today" /></label>
+            <label><span>Check-out</span><input type="date" formControlName="checkOutDate" [min]="today" /></label>
+          </div>
+          @if (formError()) { <div class="inline-error">{{ formError() }}</div> }
+
+          <div class="guest-row">
+            <span>Guests</span>
+            <div>
+              <button type="button" (click)="changeGuests(-1)">−</button>
+              <strong>{{ cartForm.value.guests || 1 }}</strong>
+              <button type="button" (click)="changeGuests(1)">+</button>
+            </div>
+          </div>
+
+          @if (nights() > 0 && selectedRoom()) {
+            <div class="price-breakdown">
+              <p><span>{{ selectedRoom()!.pricePerNight | currency:'INR':'symbol':'1.0-0' }} × {{ nights() }} nights</span><strong>{{ roomSubtotal() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+              <p><span>Taxes & fees</span><strong>{{ taxes() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+              <div></div>
+              <p class="total"><span>Total</span><strong>{{ total() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+            </div>
+          }
+
+          <button type="submit" class="btn btn-primary btn-lg full-width" [disabled]="addingToCart() || !cartForm.value.checkInDate || !cartForm.value.checkOutDate">
+            @if (addingToCart()) { <span class="spinner"></span> Adding... }
+            @else if (addedToCart()) { ✓ Added to cart! }
+            @else { Add to Cart }
+          </button>
+          @if (!cartForm.value.checkInDate || !cartForm.value.checkOutDate) {
+            <p class="tooltip-copy">Select dates first</p>
+          }
+        </form>
+
+        <div class="trust-row">
+          <span>🔒 Secure booking</span>
+          <span>✓ Free cancellation</span>
+          <span>📞 24/7 support</span>
+        </div>
+      </aside>
+    </div>
+
+    @if (showStickyPriceBar()) {
+      <div class="sticky-price-bar">
+        <div><strong>{{ h.name }}</strong><span>from {{ minPrice() | currency:'INR':'symbol':'1.0-0' }}/night</span></div>
+        <button class="btn btn-primary" (click)="scrollToBooking()">Book Now</button>
+      </div>
+    }
+  </div>
+}
+}

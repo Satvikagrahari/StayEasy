@@ -1,0 +1,113 @@
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 320px;
+  pointer-events: none;
+}
+
+.toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 320px;
+  min-height: 58px;
+  overflow: hidden;
+  padding: 14px 42px 16px 16px;
+  border-radius: var(--radius-md);
+  background: #fff;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  animation: slideDown .2s ease;
+  pointer-events: auto;
+}
+
+.toast-success  { border-left: 4px solid var(--success); }
+.toast-error    { border-left: 4px solid var(--danger); }
+.toast-warning  { border-left: 4px solid var(--warning); }
+.toast-info     { border-left: 4px solid var(--primary); }
+
+.toast-icon {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.toast-success .toast-icon { background: var(--success-light); color: #047857; }
+.toast-error .toast-icon { background: var(--danger-light); color: #B91C1C; }
+.toast-warning .toast-icon { background: var(--warning-light); color: #B45309; }
+.toast-info .toast-icon { background: var(--primary-light); color: #1D4ED8; }
+
+.toast-message {
+  margin: 0;
+  color: var(--neutral-800);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.toast-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  color: var(--neutral-400);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  line-height: 1;
+  transition: var(--transition);
+}
+
+.toast-close:hover {
+  color: var(--neutral-900);
+  transform: scale(1.08);
+}
+
+.toast-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left center;
+  animation: toastProgress linear forwards;
+}
+
+.toast-success .toast-progress { background: var(--success); }
+.toast-error .toast-progress { background: var(--danger); }
+.toast-warning .toast-progress { background: var(--warning); }
+.toast-info .toast-progress { background: var(--primary); }
+
+@keyframes toastProgress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+@media (max-width: 520px) {
+  .toast-container {
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+
+  .toast {
+    width: 100%;
+  }
+}

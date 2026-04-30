@@ -1,0 +1,9 @@
+.room-detail-card { max-width: 520px; margin: 2rem auto; }
+.room-detail-card h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 1.25rem; }
+.room-info { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1.5rem; }
+.info-row { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid #dee2e6; }
+.label { color: #6c757d; font-size: .9rem; }
+.value { font-weight: 600; }
+.text-success { color: #198754; }
+.text-danger  { color: #dc3545; }
+.room-actions { margin-top: 1rem; }

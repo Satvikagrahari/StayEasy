@@ -44,6 +44,30 @@ namespace BookingService.Infrastructure.Services
             }
         }
 
+        public async Task<string?> GetUserNameAsync(Guid userId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/internal/users/{userId}/username");
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("IdentityService returned {StatusCode} for userId {UserId}.",
+                        response.StatusCode, userId);
+                    return null;
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<UserNameResponse>();
+                return result?.UserName;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch username for userId {UserId} from IdentityService.", userId);
+                return null;
+            }
+        }
+
         private sealed record EmailResponse(string Email);
+
+        private sealed record UserNameResponse(string UserName);
     }
 }

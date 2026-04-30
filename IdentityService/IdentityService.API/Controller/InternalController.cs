@@ -28,5 +28,16 @@ namespace IdentityService.API.Controller
 
             return Ok(new { Email = profile.Email });
         }
+
+        // GET api/internal/users/{userId}/username
+        [HttpGet("users/{userId:guid}/username")]
+        public async Task<IActionResult> GetUserName(Guid userId)
+        {
+            var profile = await _authService.GetProfileAsync(userId);
+            if (profile == null)
+                return NotFound();
+
+            return Ok(new { UserName = profile.UserName });
+        }
     }
 }

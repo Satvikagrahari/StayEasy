@@ -10,6 +10,7 @@ namespace BookingService.Application.Interfaces.Services
     {
         //Task CreateBookingAsync(Guid userId, CreateBookingRequest request);
 
+        Task<List<Booking>> GetAllBookingsAsync();
         Task<List<Booking>> GetUserBookingsAsync(Guid userId);
         Task<Guid> CheckoutAsync(Guid userId);
         Task<List<Booking>> GetPendingBookingsAsync();
