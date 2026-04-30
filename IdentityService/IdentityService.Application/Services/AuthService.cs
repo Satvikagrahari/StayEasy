@@ -292,6 +292,56 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
     }
 
+    public async Task SendPasswordResetOtpAsync(PasswordResetSendOtpRequest request)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+        if (user == null)
+            throw new ApplicationException("User not found for this email");
+
+        if (!user.IsActive)
+            throw new ApplicationException("User is deactivated");
+
+        user.EmailOtpCode = GenerateOtpCode();
+        user.EmailOtpExpiryTime = DateTime.UtcNow.AddMinutes(10);
+        await _context.SaveChangesAsync();
+
+        await _otpService.SendOtpAsync(user.Email, user.EmailOtpCode);
+    }
+
+    public async Task VerifyPasswordResetOtpAsync(PasswordResetVerifyOtpRequest request)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
+
+        if (user == null)
+            throw new ApplicationException("User not found for this email");
+
+        ValidateOtp(user, request.Code);
+    }
+
+    public async Task ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+        if (user == null)
+            throw new ApplicationException("User not found for this email");
+
+        ValidateOtp(user, request.Code);
+        ValidatePassword(request.NewPassword);
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        user.IsVerified = true;
+        user.EmailOtpCode = null;
+        user.EmailOtpExpiryTime = null;
+        user.RefreshToken = null;
+        user.RefreshTokenExpiryTime = null;
+
+        await _context.SaveChangesAsync();
+    }
+
     private string GenerateJwtToken(User user)
     {
         var jwtKey = _config["Jwt:Key"] ?? throw new ApplicationException("Jwt:Key is missing");
@@ -352,5 +402,27 @@ public class AuthService : IAuthService
     private static string GenerateOtpCode()
     {
         return RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+    }
+
+    private static void ValidateOtp(User user, string code)
+    {
+        if (string.IsNullOrWhiteSpace(user.EmailOtpCode) ||
+            user.EmailOtpExpiryTime == null ||
+            user.EmailOtpExpiryTime < DateTime.UtcNow ||
+            user.EmailOtpCode != code.Trim())
+        {
+            throw new ApplicationException("Invalid or expired OTP");
+        }
+    }
+
+    private static void ValidatePassword(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password) ||
+            password.Length < 8 ||
+            !password.Any(char.IsUpper) ||
+            !password.Any(char.IsDigit))
+        {
+            throw new ApplicationException("Password must be at least 8 characters and include an uppercase letter and a number");
+        }
     }
 }

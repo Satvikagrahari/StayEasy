@@ -12,13 +12,16 @@ namespace BookingService.Application.Interfaces.Services
 
         Task<List<Booking>> GetAllBookingsAsync();
         Task<List<Booking>> GetUserBookingsAsync(Guid userId);
-        Task<Guid> CheckoutAsync(Guid userId);
+        Task<Guid> CheckoutAsync(Guid userId, string? promoCode = null);
         Task<List<Booking>> GetPendingBookingsAsync();
         Task<List<Booking>> GetConfirmedBookingsAsync();
         Task<bool> UpdateBookingStatusAsync(Guid bookingId, BookingStatus status);
-        Task SimulatePaymentAsync(Guid bookingId, bool isSuccess);
+        Task<string> CreateRazorpayOrderAsync(Guid bookingId);
+        Task<bool> VerifyRazorpayPaymentAsync(RazorpayPaymentVerificationRequest request);
         Task<bool> CancelBookingAsync(Guid bookingId, Guid userId);
         Task<bool> RequestRefundAsync(Guid bookingId, Guid userId);
         Task<bool> ApproveRefundAsync(Guid bookingId);
+        Task<byte[]?> GetInvoiceAsync(Guid bookingId, Guid userId);
+        Task<byte[]> GetAdminReportAsync();
     }
 }

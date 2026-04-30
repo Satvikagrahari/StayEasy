@@ -11,17 +11,34 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Configuration;
+using Razorpay.Api;
+
 namespace BookingService.Infrastructure.Services
 {
     public class BookingService : IBookingService
     {
         private readonly BookingDbContext _context;
         private readonly IBookingPublisher _publisher;
+        private readonly IInvoiceService _invoiceService;
+        private readonly IIdentityClient _identityClient;
+        private readonly ICatalogClient _catalogClient;
+        private readonly IConfiguration _configuration;
 
-        public BookingService(BookingDbContext context, IBookingPublisher publisher)
+        public BookingService(
+            BookingDbContext context, 
+            IBookingPublisher publisher,
+            IInvoiceService invoiceService,
+            IIdentityClient identityClient,
+            ICatalogClient catalogClient,
+            IConfiguration configuration)
         {   
             _context = context;
             _publisher = publisher;
+            _invoiceService = invoiceService;
+            _identityClient = identityClient;
+            _catalogClient = catalogClient;
+            _configuration = configuration;
         }
         
 
@@ -41,7 +58,7 @@ namespace BookingService.Infrastructure.Services
                 .OrderByDescending(b => b.BookingDate)
                 .ToListAsync();
         }
-        public async Task<Guid> CheckoutAsync(Guid userId)
+        public async Task<Guid> CheckoutAsync(Guid userId, string? promoCode = null)
         {
             var cart = await _context.Carts
                 .Include(c => c.Items)
@@ -50,9 +67,19 @@ namespace BookingService.Infrastructure.Services
             if (cart == null || !cart.Items.Any())
                 throw new Exception("Cart is empty");
 
-            var total = cart.Items.Sum(i =>
+            var subtotal = cart.Items.Sum(i =>
                 (i.CheckOutDate - i.CheckInDate).Days * i.PriceSnapshot
              );
+
+            var taxes = Math.Round(subtotal * 0.09m, 2);
+            var discount = 0m;
+
+            if (promoCode?.ToUpper() == "STAYEASY15")
+            {
+                discount = Math.Round(subtotal * 0.15m, 2);
+            }
+
+            var total = subtotal + taxes - discount;
 
             var booking = new Booking
             {
@@ -88,24 +115,7 @@ namespace BookingService.Infrastructure.Services
             cart.Status = "CheckedOut";
             await _context.SaveChangesAsync();
 
-            booking.BookingItems = bookingItems;
-
-            //_publisher.PublishBookingCreated(new
-            //{
-            //    booking.Id,
-            //    booking.UserId,
-            //    booking.TotalAmount,
-            //    Items = booking.BookingItems.Select(i => new
-            //    {
-            //        i.BookingItemId,
-            //        i.HotelId,
-            //        i.RoomTypeId,
-            //        i.CheckInDate,
-            //        i.CheckOutDate,
-            //        i.Nights,
-            //        i.Subtotal
-            //    })
-            //});
+            booking.BookingItems = bookingItems;            
 
             var bookingCreatedEvent = new BookingCreatedIntegrationEvent
             {
@@ -153,16 +163,65 @@ namespace BookingService.Infrastructure.Services
 
             return true;
         }
-        public async Task SimulatePaymentAsync(Guid bookingId, bool isSuccess)
+        public async Task<string> CreateRazorpayOrderAsync(Guid bookingId)
         {
-            var paymentEvent = new PaymentProcessedIntegrationEvent
-            {
-                BookingId = bookingId,
-                IsSuccess = isSuccess,
-                ProcessedAt = DateTime.UtcNow
-            };
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null) throw new Exception("Booking not found");
 
-            await _publisher.PublishEventAsync(paymentEvent, "payment.processed");
+            string key = _configuration["Razorpay:KeyId"] ?? "rzp_test_DUMMY_KEY";
+            string secret = _configuration["Razorpay:KeySecret"] ?? "DUMMY_SECRET";
+
+            RazorpayClient client = new RazorpayClient(key, secret);
+
+            Dictionary<string, object> options = new Dictionary<string, object>();
+            options.Add("amount", (int)(booking.TotalAmount * 100)); // amount in the smallest currency unit
+            options.Add("receipt", bookingId.ToString());
+            options.Add("currency", "INR");
+
+            Razorpay.Api.Order order = client.Order.Create(options);
+            return order["id"].ToString();
+        }
+
+        public async Task<bool> VerifyRazorpayPaymentAsync(RazorpayPaymentVerificationRequest request)
+        {
+            string secret = _configuration["Razorpay:KeySecret"] ?? "DUMMY_SECRET";
+
+            try
+            {
+                Utils.verifyPaymentSignature(new Dictionary<string, string>
+                {
+                    { "razorpay_payment_id", request.RazorpayPaymentId },
+                    { "razorpay_order_id", request.RazorpayOrderId },
+                    { "razorpay_signature", request.RazorpaySignature }
+                });
+
+                var booking = await _context.Bookings.FindAsync(request.BookingId);
+                if (booking != null)
+                {
+                    var paymentEvent = new PaymentProcessedIntegrationEvent
+                    {
+                        BookingId = request.BookingId,
+                        IsSuccess = true,
+                        ProcessedAt = DateTime.UtcNow
+                    };
+
+                    await _publisher.PublishEventAsync(paymentEvent, "payment.processed");
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                var paymentEvent = new PaymentProcessedIntegrationEvent
+                {
+                    BookingId = request.BookingId,
+                    IsSuccess = false,
+                    ProcessedAt = DateTime.UtcNow
+                };
+
+                await _publisher.PublishEventAsync(paymentEvent, "payment.processed");
+            }
+
+            return false;
         }
 
         public async Task<bool> CancelBookingAsync(Guid bookingId, Guid userId)
@@ -256,6 +315,27 @@ namespace BookingService.Infrastructure.Services
             await _publisher.PublishEventAsync(refundedEvent, "booking.refunded");
 
             return true;
+        }
+        public async Task<byte[]?> GetInvoiceAsync(Guid bookingId, Guid userId)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.BookingItems)
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
+
+            if (booking == null) return null;
+
+            var userName = await _identityClient.GetUserNameAsync(userId) ?? "Guest";
+            
+            var hotelId = booking.BookingItems.FirstOrDefault()?.HotelId ?? Guid.Empty;
+            var hotelName = (hotelId == Guid.Empty ? "StayEasy Property" : await _catalogClient.GetHotelNameAsync(hotelId)) ?? "StayEasy Property";
+
+            return await _invoiceService.GenerateInvoiceAsync(booking, userName, hotelName);
+        }
+
+        public async Task<byte[]> GetAdminReportAsync()
+        {
+            var bookings = await _context.Bookings.Include(b => b.BookingItems).ToListAsync();
+            return await _invoiceService.GenerateAdminReportAsync(bookings);
         }
     }
 }

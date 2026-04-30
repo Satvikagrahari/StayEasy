@@ -121,6 +121,8 @@ namespace BookingService.Infrastructure.Messaging
                 var identityClient = scope.ServiceProvider.GetRequiredService<IIdentityClient>();
                 var catalogClient  = scope.ServiceProvider.GetRequiredService<ICatalogClient>();
                 var emailService   = scope.ServiceProvider.GetRequiredService<IEmailService>();
+                var invoiceService = scope.ServiceProvider.GetRequiredService<IInvoiceService>();
+                var db             = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
 
                 var userEmail = await identityClient.GetUserEmailAsync(userId);
                 var userName  = await identityClient.GetUserNameAsync(userId) ?? "Guest";
@@ -132,13 +134,25 @@ namespace BookingService.Infrastructure.Messaging
                     return;
                 }
 
+                var booking = await db.Bookings
+                    .Include(b => b.BookingItems)
+                    .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+                byte[]? invoiceBytes = null;
+                if (booking != null)
+                {
+                    invoiceBytes = await invoiceService.GenerateInvoiceAsync(booking, userName, hotelName ?? "StayEasy Property");
+                }
+
                 await emailService.SendBookingConfirmationAsync(
                     userEmail,
                     userName,
                     hotelName ?? string.Empty,
                     bookingId,
                     totalAmount,
-                    bookingDate);
+                    bookingDate,
+                    invoiceBytes,
+                    $"Invoice_{bookingId.ToString().Substring(0, 8)}.pdf");
             }
             catch (Exception ex)
             {

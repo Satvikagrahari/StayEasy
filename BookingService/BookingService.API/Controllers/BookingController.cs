@@ -51,11 +51,11 @@ namespace BookingService.API.Controllers
 
         [Authorize]
         [HttpPost("checkout")]
-        public async Task<IActionResult> Checkout()
+        public async Task<IActionResult> Checkout([FromQuery] string? promoCode = null)
         {
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-            var bookingId = await _bookingService.CheckoutAsync(userId);
+            var bookingId = await _bookingService.CheckoutAsync(userId, promoCode);
 
             return Ok(new { bookingId });
         }
@@ -87,11 +87,30 @@ namespace BookingService.API.Controllers
             return Ok(new { message = $"Booking status updated to {status}" });
         }
 
-        [HttpPost("{bookingId}/simulate-payment")]
-        public async Task<IActionResult> SimulatePayment(Guid bookingId, [FromQuery] bool isSuccess = true)
+        [Authorize]
+        [HttpPost("{bookingId}/razorpay-order")]
+        public async Task<IActionResult> CreateOrder(Guid bookingId)
         {
-            await _bookingService.SimulatePaymentAsync(bookingId, isSuccess);
-            return Ok(new { message = $"Payment simulated for booking {bookingId}. Success: {isSuccess}" });
+            try
+            {
+                var orderId = await _bookingService.CreateRazorpayOrderAsync(bookingId);
+                return Ok(new { orderId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("razorpay-verify")]
+        public async Task<IActionResult> VerifyPayment([FromBody] RazorpayPaymentVerificationRequest request)
+        {
+            var success = await _bookingService.VerifyRazorpayPaymentAsync(request);
+            if (!success)
+                return BadRequest(new { message = "Payment verification failed." });
+
+            return Ok(new { message = "Payment verified successfully." });
         }
 
         [Authorize]
@@ -136,6 +155,27 @@ namespace BookingService.API.Controllers
                 return NotFound(new { message = "Booking not found or not in refund requested status." });
 
             return Ok(new { message = "Refund approved and processed." });
+        }
+
+        [Authorize]
+        [HttpGet("{id}/invoice")]
+        public async Task<IActionResult> GetInvoice(Guid id)
+        {
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var pdfBytes = await _bookingService.GetInvoiceAsync(id, userId);
+            if (pdfBytes == null)
+                return NotFound(new { message = "Booking not found or not owned by user." });
+
+            return File(pdfBytes, "application/pdf", $"Invoice_{id.ToString().Substring(0, 8)}.pdf");
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin/report")]
+        public async Task<IActionResult> GetAdminReport()
+        {
+            var pdfBytes = await _bookingService.GetAdminReportAsync();
+            return File(pdfBytes, "application/pdf", $"StayEasy_Business_Report_{DateTime.Now:yyyyMMdd}.pdf");
         }
     }
 }

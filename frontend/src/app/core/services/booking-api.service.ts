@@ -32,10 +32,12 @@ export class BookingApiService {
     });
   }
 
-  simulatePayment(bookingId: string, isSuccess: boolean): Observable<void> {
-    return this.http.post<void>(`${this.BOOKING}/${bookingId}/simulate-payment`, null, {
-      params: { isSuccess: isSuccess.toString() }
-    });
+  createRazorpayOrder(bookingId: string): Observable<{ orderId: string }> {
+    return this.http.post<{ orderId: string }>(`${this.BOOKING}/${bookingId}/razorpay-order`, {});
+  }
+
+  verifyPayment(request: { razorpayPaymentId: string; razorpayOrderId: string; razorpaySignature: string; bookingId: string }): Observable<void> {
+    return this.http.post<void>(`${this.BOOKING}/razorpay-verify`, request);
   }
 
   getMyBookings(): Observable<Booking[]> {

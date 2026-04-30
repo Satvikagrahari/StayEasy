@@ -59,8 +59,8 @@
         <h1>Payment</h1>
         <div class="secure-box">🔒 Your payment is secured by 256-bit SSL encryption.</div>
         <div class="amount-display">{{ payableTotal() | currency:'INR':'symbol':'1.0-0' }}</div>
-        <button class="btn btn-primary btn-lg full-width" (click)="placeOrder()" [disabled]="placing() || paymentOpen()">
-          🔒 {{ placing() ? 'Creating order...' : ('Pay ' + (payableTotal() | currency:'INR':'symbol':'1.0-0')) }}
+        <button class="btn btn-primary btn-lg full-width" (click)="placeOrder()" [disabled]="placing()">
+          🔒 {{ placing() ? 'Initializing payment...' : ('Pay ' + (payableTotal() | currency:'INR':'symbol':'1.0-0')) }}
         </button>
       </section>
     } @else {
@@ -84,68 +84,5 @@
         </div>
       </section>
     }
-  </div>
-}
-
-@if (paymentOpen()) {
-  <div class="rzp-overlay" (click)="closePayment()">
-    <div class="rzp-modal" (click)="$event.stopPropagation()">
-      <div class="rzp-header">
-        <div class="rzp-brand">
-          <div class="rzp-logo">R</div>
-          <div>
-            <div class="rzp-title">Razorpay</div>
-            <div class="rzp-sub">StayEasy Checkout</div>
-          </div>
-        </div>
-        <button type="button" class="rzp-close" (click)="closePayment()" [disabled]="paymentStep() === 'processing' || confirming()">×</button>
-      </div>
-
-      @if (paymentStep() === 'checkout') {
-        <div class="rzp-body">
-          <div class="rzp-amount">
-            <div class="rzp-amount-label">Amount</div>
-            <div class="rzp-amount-value">{{ rzpAmount() | currency:'INR':'symbol':'1.0-0' }}</div>
-          </div>
-          @if (paymentError()) { <div class="alert alert-danger">{{ paymentError() }}</div> }
-          <div class="rzp-methods">
-            <button type="button" class="rzp-tab" [class.active]="rzpMethod === 'upi'" (click)="rzpMethod = 'upi'">UPI</button>
-            <button type="button" class="rzp-tab" [class.active]="rzpMethod === 'card'" (click)="rzpMethod = 'card'">Card</button>
-          </div>
-          @if (rzpMethod === 'upi') {
-            <div class="form-group"><label>UPI ID</label><input class="form-control" placeholder="name@bank" [(ngModel)]="rzpUpiVpa" /></div>
-          } @else {
-            <div class="form-group"><label>Card Number</label><input class="form-control" placeholder="1234 5678 9012 3456" [(ngModel)]="rzpCardNumber" /></div>
-            <div class="form-group"><label>Cardholder Name</label><input class="form-control" placeholder="Satvik" [(ngModel)]="rzpCardName" /></div>
-            <div class="rzp-row">
-              <div class="form-group"><label>Expiry</label><input class="form-control" placeholder="MM/YY" [(ngModel)]="rzpCardExpiry" /></div>
-              <div class="form-group"><label>CVV</label><input class="form-control" placeholder="123" [(ngModel)]="rzpCardCvv" /></div>
-            </div>
-          }
-          <div class="rzp-actions">
-            <button type="button" class="btn btn-secondary" (click)="closePayment()">Cancel</button>
-            <button type="button" class="btn btn-primary" (click)="submitPayment()">Pay {{ rzpAmount() | currency:'INR':'symbol':'1.0-0' }}</button>
-          </div>
-        </div>
-      } @else if (paymentStep() === 'processing') {
-        <div class="rzp-body rzp-center"><div class="spinner"></div><div class="rzp-processing">Processing payment...</div><div class="muted">Please wait</div></div>
-      } @else if (paymentStep() === 'otp') {
-        <div class="rzp-body">
-          <div class="rzp-result"><div class="rzp-result-title">Additional authentication</div><div class="rzp-result-sub">Enter the OTP sent to your registered mobile number.</div></div>
-          @if (paymentError()) { <div class="alert alert-danger">{{ paymentError() }}</div> }
-          <div class="form-group"><label>OTP</label><input class="form-control" inputmode="numeric" maxlength="6" placeholder="6-digit OTP" [(ngModel)]="rzpOtp" /></div>
-          <div class="rzp-actions"><button type="button" class="btn btn-secondary" (click)="closePayment()">Cancel</button><button type="button" class="btn btn-primary" (click)="submitOtp()">Verify & Pay</button></div>
-        </div>
-      } @else {
-        <div class="rzp-body">
-          @if (rzpResultSuccess() === true) {
-            <div class="rzp-result rzp-success"><div class="rzp-result-title">Payment successful</div><div class="rzp-result-sub">{{ rzpResultMessage() || 'Your payment was captured.' }}</div></div>
-          } @else {
-            <div class="rzp-result rzp-fail"><div class="rzp-result-title">Payment failed</div><div class="rzp-result-sub">{{ rzpResultMessage() || 'The payment could not be completed.' }}</div></div>
-          }
-          <div class="rzp-actions"><button type="button" class="btn btn-primary" (click)="continueAfterPayment()" [disabled]="confirming()">{{ confirming() ? 'Confirming...' : 'Continue' }}</button></div>
-        </div>
-      }
-    </div>
   </div>
 }

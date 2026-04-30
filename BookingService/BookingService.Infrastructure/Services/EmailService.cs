@@ -2,6 +2,7 @@ using BookingService.Application.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
@@ -25,7 +26,9 @@ namespace BookingService.Infrastructure.Services
           string hotelName,
             Guid bookingId,
           decimal billAmount,
-            DateTime bookingDate)
+            DateTime bookingDate,
+            byte[]? attachment = null,
+            string? attachmentName = null)
         {
             var smtpSection = _config.GetSection("Smtp");
             var host      = smtpSection["Host"]!;
@@ -56,6 +59,12 @@ namespace BookingService.Infrastructure.Services
                 IsBodyHtml = true
             };
             message.To.Add(toEmail);
+
+            if (attachment != null && !string.IsNullOrEmpty(attachmentName))
+            {
+                var stream = new MemoryStream(attachment);
+                message.Attachments.Add(new Attachment(stream, attachmentName, "application/pdf"));
+            }
 
             try
             {

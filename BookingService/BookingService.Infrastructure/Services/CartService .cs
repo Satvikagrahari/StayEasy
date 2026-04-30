@@ -1,4 +1,4 @@
-﻿using BookingService.Application.DTOs.Request;
+using BookingService.Application.DTOs.Request;
 using BookingService.Application.Interfaces.Services;
 using BookingService.Domain.Entities;
 using BookingService.Infrastructure.Data;
@@ -26,6 +26,9 @@ namespace BookingService.Infrastructure.Services
 
         public async Task AddToCartAsync(Guid userId, CreateCartItemRequest request)
         {
+            if (request.CheckInDate.Date < DateTime.UtcNow.Date)
+                throw new ArgumentException("Check-in date cannot be in the past");
+
             if (request.CheckOutDate.Date <= request.CheckInDate.Date)
                 throw new ArgumentException("Check-out date must be after check-in date");
 

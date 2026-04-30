@@ -20,5 +20,8 @@ namespace IdentityService.Application.Interfaces.Services
         Task DeleteUserAsync(Guid userId);
         Task SendOtpAsync(SendOtpRequest request);
         Task VerifyOtpAsync(VerifyOtpRequest request);
+        Task SendPasswordResetOtpAsync(PasswordResetSendOtpRequest request);
+        Task VerifyPasswordResetOtpAsync(PasswordResetVerifyOtpRequest request);
+        Task ResetPasswordAsync(ResetPasswordRequest request);
     }
 }

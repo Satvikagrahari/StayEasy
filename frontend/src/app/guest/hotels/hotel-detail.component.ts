@@ -101,6 +101,10 @@ export class HotelDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.cartForm.invalid) { this.cartForm.markAllAsTouched(); return; }
     const { checkInDate, checkOutDate, guests } = this.cartForm.value;
+    if (checkInDate! < this.today) {
+      this.formError.set('Check-in date cannot be in the past.');
+      return;
+    }
     if (checkInDate! >= checkOutDate!) {
       this.formError.set('Check-out must be after check-in.');
       return;

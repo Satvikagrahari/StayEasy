@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using BookingService.Infrastructure.Messaging;
 using BookingService.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using QuestPDF.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -11,6 +12,9 @@ using Serilog;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// QuestPDF License
+QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration)
@@ -23,6 +27,7 @@ builder.Services.AddDbContext<BookingDbContext>(options =>
 
 // ================= DI - Application Services =================
 builder.Services.AddScoped<IBookingService, BookingService.Infrastructure.Services.BookingService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddHttpClient<ICartService, CartService>();
 
 // ================= Email + Identity HTTP Client =================

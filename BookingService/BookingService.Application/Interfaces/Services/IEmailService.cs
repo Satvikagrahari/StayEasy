@@ -11,6 +11,8 @@ namespace BookingService.Application.Interfaces.Services
             string hotelName,
             Guid bookingId,
             decimal billAmount,
-            DateTime bookingDate);
+            DateTime bookingDate,
+            byte[]? attachment = null,
+            string? attachmentName = null);
     }
 }

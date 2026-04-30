@@ -70,4 +70,28 @@ public class AuthController : ControllerBase
         await _authService.VerifyOtpAsync(request);
         return Ok(new { message = "OTP verified successfully" });
     }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password/send-otp")]
+    public async Task<IActionResult> SendPasswordResetOtp([FromBody] PasswordResetSendOtpRequest request)
+    {
+        await _authService.SendPasswordResetOtpAsync(request);
+        return Ok(new { message = "Password reset OTP sent successfully" });
+    }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password/verify-otp")]
+    public async Task<IActionResult> VerifyPasswordResetOtp([FromBody] PasswordResetVerifyOtpRequest request)
+    {
+        await _authService.VerifyPasswordResetOtpAsync(request);
+        return Ok(new { message = "OTP verified successfully" });
+    }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password/reset")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        await _authService.ResetPasswordAsync(request);
+        return Ok(new { message = "Password updated successfully" });
+    }
 }
