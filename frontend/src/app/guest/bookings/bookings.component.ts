@@ -151,4 +151,18 @@ export class BookingsComponent implements OnInit {
       }
     }
   }
+
+  downloadInvoice(bookingId: string): void {
+    this.bookingApi.downloadInvoice(bookingId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Invoice_${bookingId.substring(0, 8)}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => this.toast.error('Failed to download invoice.')
+    });
+  }
 }

@@ -48,11 +48,16 @@ export class CheckoutComponent implements OnInit {
   rzpCardCvv = '';
   rzpOtp = '';
 
+  promoCode = '';
+  promoError = signal<string | null>(null);
+
   total = computed(() => (this.cart()?.items ?? []).reduce((sum, item) => sum + this.subtotal(item), 0));
   taxes = computed(() => Math.round(this.total() * 0.09));
-  payableTotal = computed(() => this.total() + this.taxes());
+  discount = computed(() => this.cartService.promoApplied() ? Math.round(this.total() * 0.15) : 0);
+  payableTotal = computed(() => this.total() + this.taxes() - this.discount());
 
   ngOnInit(): void {
+    this.promoCode = this.cartService.promoCode();
     this.bookingApi.getCart().subscribe({
       next: (c) => { this.cart.set(c); this.cartService.sync(c); this.isLoading.set(false); },
       error: () => { this.error.set('Failed to load cart.'); this.isLoading.set(false); }
@@ -63,7 +68,8 @@ export class CheckoutComponent implements OnInit {
     if (this.placing() || this.paymentOpen()) return;
 
     this.placing.set(true);
-    this.bookingApi.checkout().subscribe({
+    const code = this.cartService.promoApplied() ? this.cartService.promoCode() : undefined;
+    this.bookingApi.checkout(code).subscribe({
       next: (res) => {
         this.placing.set(false);
         this.openDummyRazorpay(res.bookingId, this.payableTotal());
@@ -362,5 +368,35 @@ export class CheckoutComponent implements OnInit {
 
   subtotal(item: { checkInDate: string; checkOutDate: string; priceSnapshot: number }): number {
     return this.nights(item) * item.priceSnapshot;
+  }
+
+  applyPromo(): void {
+    if (this.cartService.applyPromo(this.promoCode)) {
+      this.promoError.set(null);
+      this.toast.success('Promo applied!');
+      return;
+    }
+    this.promoError.set('Invalid promo code.');
+  }
+
+  promoApplied() {
+    return this.cartService.promoApplied();
+  }
+
+  downloadInvoice(): void {
+    const bookingId = this.confirmedBookingId();
+    if (!bookingId) return;
+
+    this.bookingApi.downloadInvoice(bookingId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Invoice_${bookingId.substring(0, 8)}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => this.toast.error('Failed to download invoice.')
+    });
   }
 }

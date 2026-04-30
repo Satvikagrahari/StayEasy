@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { HotelApiService } from '../../core/services/hotel-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CreateHotelRequest, Hotel } from '../../core/models/hotel.models';
@@ -17,6 +18,7 @@ export class HotelsComponent implements OnInit {
   private hotelApi = inject(HotelApiService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+  private router = inject(Router);
 
   hotels = signal<Hotel[]>([]);
   isLoading = signal(true);
@@ -160,5 +162,9 @@ export class HotelsComponent implements OnInit {
 
   ratingValue(): number {
     return Number(this.hotelForm.value.starRating ?? 0);
+  }
+
+  manageRooms(hotel: Hotel): void {
+    this.router.navigate(['/admin/manage-rooms'], { queryParams: { hotelId: hotel.hotelId } });
   }
 }

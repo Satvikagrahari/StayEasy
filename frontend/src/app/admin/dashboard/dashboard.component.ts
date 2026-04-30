@@ -9,6 +9,8 @@ import { Booking } from '../../core/models/booking.models';
 
 Chart.register(...registerables);
 
+import { BookingApiService } from '../../core/services/booking-api.service';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -18,6 +20,7 @@ Chart.register(...registerables);
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private adminApi = inject(AdminApiService);
+  private bookingApi = inject(BookingApiService);
 
   @ViewChild('bookingTrendCanvas') bookingTrendCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('revenueTrendCanvas') revenueTrendCanvas?: ElementRef<HTMLCanvasElement>;
@@ -224,5 +227,19 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.bookingTrendChart = undefined;
     this.revenueTrendChart = undefined;
     this.statusChart = undefined;
+  }
+
+  downloadReport(): void {
+    this.bookingApi.downloadAdminReport().subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `StayEasy_Business_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => this.error.set('Failed to download business report.')
+    });
   }
 }

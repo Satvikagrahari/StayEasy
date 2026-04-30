@@ -58,3 +58,18 @@ export interface VerifyOtpRequest {
   email: string;
   code: string;
 }
+
+export interface PasswordResetSendOtpRequest {
+  email: string;
+}
+
+export interface PasswordResetVerifyOtpRequest {
+  email: string;
+  code: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  code: string;
+  newPassword: string;
+}

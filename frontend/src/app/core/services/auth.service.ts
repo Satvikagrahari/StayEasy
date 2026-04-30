@@ -6,6 +6,9 @@ import {
   AuthResponse,
   JwtPayload,
   LoginRequest,
+  PasswordResetSendOtpRequest,
+  PasswordResetVerifyOtpRequest,
+  ResetPasswordRequest,
   SendOtpRequest,
   SignupRequest,
   UpdateProfileRequest,
@@ -65,6 +68,18 @@ export class AuthService {
 
   verifyOtp(request: VerifyOtpRequest): Observable<void> {
     return this.http.post<void>(`${this.BASE_URL}/verify-otp`, request);
+  }
+
+  sendPasswordResetOtp(request: PasswordResetSendOtpRequest): Observable<void> {
+    return this.http.post<void>(`${this.BASE_URL}/forgot-password/send-otp`, request);
+  }
+
+  verifyPasswordResetOtp(request: PasswordResetVerifyOtpRequest): Observable<void> {
+    return this.http.post<void>(`${this.BASE_URL}/forgot-password/verify-otp`, request);
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${this.BASE_URL}/forgot-password/reset`, request);
   }
 
   getProfile(): Observable<UserProfile> {

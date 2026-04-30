@@ -31,4 +31,24 @@ export class BookingConfirmationComponent implements OnInit {
       error: () => { this.error.set('Failed to load booking.'); this.isLoading.set(false); }
     });
   }
+
+  downloadInvoice(): void {
+    const b = this.booking();
+    if (!b) return;
+
+    this.bookingApi.downloadInvoice(b.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Invoice_${b.id.substring(0, 8)}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Download failed', err);
+        alert('Failed to download invoice. Please try again later.');
+      }
+    });
+  }
 }

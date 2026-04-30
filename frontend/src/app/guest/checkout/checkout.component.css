@@ -80,28 +80,79 @@
 }
 
 .summary-box {
-  display: grid;
-  gap: 8px;
-  margin: 22px 0;
-  padding: 18px;
-  border-radius: var(--radius-md);
-  background: var(--neutral-50);
+  margin: 24px 0;
+  padding: 24px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
-.summary-box p {
+.summary-rows {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.summary-rows p {
   display: flex;
   justify-content: space-between;
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
 }
 
-.summary-box div {
+.summary-rows strong {
+  color: #1e293b;
+}
+
+.discount-line {
+  color: #059669 !important;
+  font-weight: 600;
+}
+
+.promo-section {
+  padding: 16px 0;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.promo-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.promo-input-row input {
+  flex: 1;
+  height: 40px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 12px;
+}
+
+.promo-input-row button {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.summary-divider {
   height: 1px;
-  background: var(--border);
+  background: #cbd5e1;
+  margin: 16px 0;
 }
 
 .summary-box .total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 20px;
   font-weight: 800;
+  color: #0f172a;
+  margin: 0;
 }
+
+.text-danger { color: #ef4444; font-size: 13px; margin-top: 6px; }
+.text-success { color: #059669; font-size: 13px; font-weight: 600; margin-top: 6px; }
 
 .secure-box {
   margin-bottom: 24px;

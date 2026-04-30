@@ -7,6 +7,7 @@ export const routes: Routes = [
   { path: 'login', canActivate: [guestGuard], loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
   { path: 'register', canActivate: [guestGuard], loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent) },
   { path: 'verify-otp', canActivate: [guestGuard], loadComponent: () => import('./auth/verify-otp/verify-otp.component').then(m => m.VerifyOtpComponent) },
+  { path: 'forgot-password', canActivate: [guestGuard], loadComponent: () => import('./auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent) },
   { path: 'auth', canActivate: [guestGuard], loadChildren: () => import('./auth/auth.routes').then(m => m.AUTH_ROUTES) },
   { path: 'admin', canActivate: [authGuard, adminGuard], loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES) },
   { path: 'account-center', canActivate: [authGuard], loadComponent: () => import('./account/account-center.component').then(m => m.AccountCenterComponent) },

@@ -30,7 +30,6 @@ export class CartComponent implements OnInit {
   hotels = signal<Record<string, Hotel>>({});
   rooms = signal<Record<string, RoomType>>({});
   promoCode = '';
-  promoApplied = signal(false);
   promoError = signal<string | null>(null);
 
   total = computed(() => {
@@ -38,10 +37,11 @@ export class CartComponent implements OnInit {
     return items.reduce((sum, i) => sum + this.subtotal(i), 0);
   });
   taxes = computed(() => Math.round(this.total() * 0.09));
-  discount = computed(() => this.promoApplied() ? Math.round(this.total() * 0.15) : 0);
+  discount = computed(() => this.cartService.promoApplied() ? Math.round(this.total() * 0.15) : 0);
   grandTotal = computed(() => this.total() + this.taxes() - this.discount());
 
   ngOnInit(): void {
+    this.promoCode = this.cartService.promoCode();
     this.loadCart();
   }
 
@@ -74,13 +74,15 @@ export class CartComponent implements OnInit {
   }
 
   applyPromo(): void {
-    if (this.promoCode.trim().toUpperCase() === 'STAYEASY15') {
-      this.promoApplied.set(true);
+    if (this.cartService.applyPromo(this.promoCode)) {
       this.promoError.set(null);
       return;
     }
-    this.promoApplied.set(false);
     this.promoError.set('Invalid promo code.');
+  }
+
+  promoApplied() {
+    return this.cartService.promoApplied();
   }
 
   hotelName(item: { hotelId: string }): string {

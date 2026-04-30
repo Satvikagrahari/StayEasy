@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { BehaviorSubject, EMPTY, catchError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { BookingApiService } from './booking-api.service';
@@ -13,6 +13,9 @@ export class CartService {
 
   count$ = this.countSubject.asObservable();
   pulse$ = this.pulseSubject.asObservable();
+
+  promoApplied = signal(false);
+  promoCode = signal('');
 
   constructor() {
     this.authService.currentUser$.subscribe(user => {
@@ -52,5 +55,21 @@ export class CartService {
     if (forcePulse || count > previous) {
       this.pulseSubject.next(Date.now());
     }
+  }
+
+  applyPromo(code: string): boolean {
+    if (code.trim().toUpperCase() === 'STAYEASY15') {
+      this.promoApplied.set(true);
+      this.promoCode.set(code.trim().toUpperCase());
+      return true;
+    }
+    this.promoApplied.set(false);
+    this.promoCode.set('');
+    return false;
+  }
+
+  resetPromo(): void {
+    this.promoApplied.set(false);
+    this.promoCode.set('');
   }
 }

@@ -30,6 +30,7 @@ export class LoginComponent implements OnInit {
   showPassword = false;
   private returnUrl = '/hotels';
   showVerifiedBanner = false;
+  needsVerification = false;
 
   ngOnInit(): void {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] ?? '/hotels';
@@ -54,11 +55,37 @@ export class LoginComponent implements OnInit {
         error: (err) => {
           this.isLoading = false;
           this.errorMessage = err.error?.message ?? 'Invalid login credentials. Please try again.';
+          
+          if (this.errorMessage?.toLowerCase().includes('verify your email')) {
+            this.needsVerification = true;
+          }
+          
           this.toast.error(this.errorMessage ?? 'Login failed.');
         }
       });
     } else {
       this.loginForm.markAllAsTouched();
     }
+  }
+
+  resendVerification() {
+    const email = this.loginForm.get('email')?.value;
+    if (!email) {
+      this.toast.error('Email is required to resend verification.');
+      return;
+    }
+
+    this.isLoading = true;
+    this.authService.sendOtp({ email }).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.toast.success('Verification OTP sent to your email.');
+        this.router.navigate(['/verify-otp'], { queryParams: { email } });
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.toast.error(err.error?.message ?? 'Failed to send OTP.');
+      }
+    });
   }
 }

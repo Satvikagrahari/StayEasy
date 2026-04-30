@@ -31,10 +31,26 @@
           </div>
         }
         <div class="summary-box">
-          <p><span>Subtotal</span><strong>{{ total() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
-          <p><span>Taxes & fees</span><strong>{{ taxes() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
-          <div></div>
-          <p class="total"><span>Total</span><strong>{{ payableTotal() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+          <div class="summary-rows">
+            <p><span>Subtotal</span><strong>{{ total() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+            <p><span>Taxes & fees</span><strong>{{ taxes() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+            @if (promoApplied()) {
+              <p class="discount-line"><span>Promo Discount</span><strong>-{{ discount() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+            }
+          </div>
+          
+          <div class="promo-section">
+            <div class="promo-input-row">
+              <input [(ngModel)]="promoCode" placeholder="Have a promo code?" class="form-control" />
+              <button type="button" class="btn btn-secondary" (click)="applyPromo()">Apply</button>
+            </div>
+            @if (promoError()) { <div class="text-danger mt-1">{{ promoError() }}</div> }
+            @if (promoApplied()) { <div class="text-success mt-1">✓ STAYEASY15 applied</div> }
+          </div>
+
+          <div class="summary-divider"></div>
+          
+          <p class="total"><span>Total Payable</span><strong>{{ payableTotal() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
         </div>
         <button class="btn btn-primary btn-lg" (click)="continueToPayment()">Continue to Payment</button>
       </section>
@@ -62,6 +78,7 @@
         </div>
         <p class="muted">You'll receive a confirmation email shortly.</p>
         <div class="confirm-actions">
+          <button (click)="downloadInvoice()" class="btn btn-success">Download Invoice</button>
           <a routerLink="/bookings" class="btn btn-primary">View My Bookings</a>
           <a routerLink="/hotels" class="btn btn-ghost">Book Another Hotel</a>
         </div>

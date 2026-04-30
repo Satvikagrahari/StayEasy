@@ -26,8 +26,10 @@ export class BookingApiService {
   }
 
   // Booking
-  checkout(): Observable<CheckoutResponse> {
-    return this.http.post<CheckoutResponse>(`${this.BOOKING}/checkout`, {});
+  checkout(promoCode?: string): Observable<CheckoutResponse> {
+    return this.http.post<CheckoutResponse>(`${this.BOOKING}/checkout`, {}, {
+      params: promoCode ? { promoCode } : {}
+    });
   }
 
   simulatePayment(bookingId: string, isSuccess: boolean): Observable<void> {
@@ -69,5 +71,13 @@ export class BookingApiService {
 
   approveRefund(id: string): Observable<void> {
     return this.http.post<void>(`${this.BOOKING}/${id}/approve-refund`, {});
+  }
+
+  downloadInvoice(bookingId: string): Observable<Blob> {
+    return this.http.get(`${this.BOOKING}/${bookingId}/invoice`, { responseType: 'blob' });
+  }
+
+  downloadAdminReport(): Observable<Blob> {
+    return this.http.get(`${this.BOOKING}/admin/report`, { responseType: 'blob' });
   }
 }

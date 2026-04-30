@@ -31,6 +31,7 @@
             <td><span class="badge badge-neutral">{{ hotel.roomTypes.length }} room type{{ hotel.roomTypes.length === 1 ? '' : 's' }}</span></td>
             <td><span [class]="isActive(hotel) ? 'badge badge-success' : 'badge badge-neutral'">{{ isActive(hotel) ? 'Active' : 'Inactive' }}</span></td>
             <td class="actions-cell">
+              <button class="btn btn-ghost btn-sm" (click)="manageRooms(hotel)">Manage Rooms</button>
               <button class="icon-btn edit" (click)="openEdit(hotel)" title="Edit">✎</button>
               <button class="btn btn-ghost btn-sm" (click)="deactivateTarget.set(hotel)" [disabled]="deletingId() === hotel.hotelId">
                 {{ isActive(hotel) ? 'Deactivate' : 'Activate' }}

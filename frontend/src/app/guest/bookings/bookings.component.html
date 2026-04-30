@@ -37,11 +37,16 @@
           <p class="trip-line">📍 {{ location(booking) }}</p>
           <div class="amount-row"><strong>Total: {{ booking.totalAmount | currency:'INR':'symbol':'1.0-0' }}</strong></div>
           <div class="booking-actions">
+            @if (booking.status === 'Confirmed') {
+              <button class="btn btn-success btn-sm" (click)="downloadInvoice(booking.id)">Invoice</button>
+            }
             <button class="btn btn-ghost btn-sm">View Details</button>
             @if (canCancel(booking)) {
               <button class="btn btn-danger btn-sm" (click)="cancelTarget.set(booking)" [disabled]="actionId() === booking.id">Cancel Booking</button>
             } @else if (activeTab() === 'past') {
               <button class="btn btn-ghost btn-sm" (click)="writeReview()">Write a Review</button>
+            } @else if (booking.status.toLowerCase() === 'cancelled') {
+              <button class="btn btn-primary btn-sm" (click)="requestRefund(booking.id)" [disabled]="actionId() === booking.id">Request Refund</button>
             }
           </div>
         </article>

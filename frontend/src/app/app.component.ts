@@ -43,7 +43,7 @@ export class AppComponent {
 
   private syncShellState(): void {
     this.isAdminRoute.set(this.router.url.startsWith('/admin'));
-    this.isAuthRoute.set(['/login', '/register', '/verify-otp', '/auth'].some(path => this.router.url.startsWith(path)));
+    this.isAuthRoute.set(['/login', '/register', '/verify-otp', '/forgot-password', '/auth'].some(path => this.router.url.startsWith(path)));
     this.adminSidebarOpen.set(false);
     this.pageTitle.set(this.resolveRouteTitle() ?? 'Dashboard');
   }

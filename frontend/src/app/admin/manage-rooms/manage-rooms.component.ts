@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { HotelApiService } from '../../core/services/hotel-api.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -17,6 +18,7 @@ export class ManageRoomsComponent implements OnInit {
   private hotelApi = inject(HotelApiService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
 
   hotels = signal<Hotel[]>([]);
   selectedHotel = signal<Hotel | null>(null);
@@ -45,6 +47,15 @@ export class ManageRoomsComponent implements OnInit {
       next: hotels => {
         this.hotels.set(hotels);
         this.isLoading.set(false);
+        
+        // Priority 1: Check query params for initial selection
+        const queryId = this.route.snapshot.queryParams['hotelId'];
+        if (queryId) {
+          this.selectHotelId(queryId);
+          return;
+        }
+
+        // Priority 2: Check existing selection (refresh case)
         const selected = this.selectedHotel();
         if (selected) {
           this.selectedHotel.set(hotels.find(h => h.hotelId === selected.hotelId) ?? null);

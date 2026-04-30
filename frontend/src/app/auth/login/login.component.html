@@ -42,10 +42,15 @@
           <div class="error-message">✕ Password is required</div>
         }
 
-        <a href="#" class="forgot-link">Forgot password?</a>
+        <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
 
         @if (errorMessage) {
-          <div class="error-alert">{{ errorMessage }}</div>
+          <div class="error-alert">
+            {{ errorMessage }}
+            @if (needsVerification) {
+              <button type="button" class="btn btn-link p-0 ms-2" (click)="resendVerification()">Verify Now →</button>
+            }
+          </div>
         }
 
         <button type="submit" class="btn btn-primary btn-lg full-width" [disabled]="isLoading || loginForm.invalid">

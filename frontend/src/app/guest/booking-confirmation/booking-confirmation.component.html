@@ -26,6 +26,11 @@
       </div>
 
       <div class="actions">
+        @if (b.status === 'Confirmed') {
+          <button (click)="downloadInvoice()" class="btn btn-success">
+            <i class="bi bi-download"></i> Download Invoice
+          </button>
+        }
         <a routerLink="/bookings" class="btn btn-primary">My Bookings</a>
         <a routerLink="/home" class="btn btn-secondary">Back to Home</a>
       </div>
