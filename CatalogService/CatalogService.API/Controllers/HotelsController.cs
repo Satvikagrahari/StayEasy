@@ -60,6 +60,17 @@ namespace CatalogService.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
+        [HttpDelete("delete/hotel/{id:guid}")]
+        public async Task<IActionResult> DeleteHotel(Guid id)
+        {
+            var deactivated = await _hotelService.DeactivateHotelAsync(id);
+            if (!deactivated)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost("rooms")]
         public async Task<IActionResult> AddRoom(CreateRoomTypeRequest request)
         {
@@ -74,6 +85,17 @@ namespace CatalogService.API.Controllers
         {
             var updated = await _hotelService.UpdateRoomTypeAsync(id, request);
             if (!updated)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("delete/roomtype/{id:guid}")]
+        public async Task<IActionResult> DeleteRoomType(Guid id)
+        {
+            var deleted = await _hotelService.DeleteRoomTypeAsync(id);
+            if (!deleted)
                 return NotFound();
 
             return NoContent();

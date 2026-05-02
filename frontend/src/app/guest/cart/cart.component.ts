@@ -66,9 +66,8 @@ export class CartComponent implements OnInit {
         this.toast.success('Item removed.');
         this.loadCart();
       },
-      error: (err) => {
+      error: () => {
         this.removing.set(null);
-        this.toast.error(err.error?.message ?? 'Failed to remove item.');
       }
     });
   }

@@ -26,6 +26,8 @@ export class ManageRoomsComponent implements OnInit {
   showForm = signal(false);
   editingId = signal<string | null>(null);
   saving = signal(false);
+  deletingRoomId = signal<string | null>(null);
+  deleteTarget = signal<RoomType | null>(null);
 
   roomForm = this.fb.group({
     type: ['', [Validators.required, Validators.minLength(2)]],
@@ -131,11 +133,34 @@ export class ManageRoomsComponent implements OnInit {
         this.toast.success(id ? 'Room type updated.' : 'Room type created.');
         this.refreshHotel(hotel.hotelId);
       },
-      error: (err: { error?: { message?: string } }) => {
+      error: () => {
         this.saving.set(false);
-        this.toast.error(err.error?.message ?? 'Save failed.');
       }
     });
+  }
+
+  deleteRoom(room: RoomType): void {
+    this.deletingRoomId.set(room.roomTypeId);
+    this.hotelApi.deleteRoomType(room.roomTypeId).subscribe({
+      next: () => {
+        this.deletingRoomId.set(null);
+        this.deleteTarget.set(null);
+        this.toast.success('Room type deleted.');
+        const hotel = this.selectedHotel();
+        if (hotel) {
+          this.refreshHotel(hotel.hotelId);
+        }
+      },
+      error: () => {
+        this.deletingRoomId.set(null);
+      }
+    });
+  }
+
+  confirmDeleteRoom(): void {
+    const room = this.deleteTarget();
+    if (!room) return;
+    this.deleteRoom(room);
   }
 
   private refreshHotel(hotelId: string): void {

@@ -75,7 +75,6 @@ export class ForgotPasswordComponent {
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.error?.message ?? 'Could not send OTP. Please try again.';
-        this.toast.error(this.errorMessage ?? 'Could not send OTP.');
       }
     });
   }

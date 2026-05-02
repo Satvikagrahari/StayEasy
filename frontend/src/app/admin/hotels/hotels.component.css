@@ -9,6 +9,8 @@
 .hotel-table-card { padding:0; overflow:hidden; }
 td strong, td span { display:block; }
 td > span { color:var(--neutral-500); font-size:13px; }
+.hotel-summary { display:flex; align-items:center; gap:10px; }
+.hotel-summary img { width:52px; height:40px; object-fit:cover; border-radius:6px; background:var(--neutral-100); }
 .stars { display:inline-block; color:#FBBF24; }
 .icon-btn { width:34px; height:34px; border:0; border-radius:50%; background:transparent; cursor:pointer; font-size:18px; }
 .icon-btn:hover { background:var(--primary-50); color:var(--primary); }
@@ -29,6 +31,9 @@ td > span { color:var(--neutral-500); font-size:13px; }
 .star-selector span { margin-right:8px; color:var(--neutral-700); font-size:13px; font-weight:700; }
 .star-selector button { border:0; background:transparent; color:var(--neutral-300); cursor:pointer; font-size:24px; }
 .star-selector button.active { color:#FBBF24; }
+.image-url-section { display:grid; gap:10px; }
+.image-url-header { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--neutral-700); font-size:13px; font-weight:700; }
+.image-url-row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; }
 .room-note { padding:10px 12px; border-radius:var(--radius-md); background:var(--primary-50); color:var(--neutral-600); font-size:12px; }
 .slide-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }
 .modal-backdrop { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; background:rgba(15,23,42,.52); }
@@ -36,4 +41,4 @@ td > span { color:var(--neutral-500); font-size:13px; }
 .confirm-modal h2 { font-size:22px; font-weight:800; }
 .confirm-modal p { margin:10px 0 20px; color:var(--neutral-600); }
 .modal-actions { display:flex; justify-content:flex-end; gap:10px; }
-@media (max-width:720px){ .search-filter,.pagination-row,.admin-page-header{flex-direction:column; align-items:stretch;} .two-col,.three-col{grid-template-columns:1fr;} }
+@media (max-width:720px){ .search-filter,.pagination-row,.admin-page-header{flex-direction:column; align-items:stretch;} .two-col,.three-col,.image-url-row{grid-template-columns:1fr;} }

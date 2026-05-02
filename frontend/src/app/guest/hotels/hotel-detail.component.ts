@@ -45,9 +45,9 @@ export class HotelDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   today = new Date().toISOString().split('T')[0];
 
   cartForm = this.fb.group({
-    checkInDate:  ['', Validators.required],
+    checkInDate: ['', Validators.required],
     checkOutDate: ['', Validators.required],
-    guests:       [1, [Validators.required, Validators.min(1)]]
+    guests: [1, [Validators.required, Validators.min(1)]]
   });
 
   ngOnInit(): void {
@@ -128,9 +128,8 @@ export class HotelDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cartService.increment();
         setTimeout(() => this.addedToCart.set(false), 1800);
       },
-      error: (err) => {
+      error: () => {
         this.addingToCart.set(false);
-        this.toast.error(err.error?.message ?? 'Failed to add to cart.');
       }
     });
   }

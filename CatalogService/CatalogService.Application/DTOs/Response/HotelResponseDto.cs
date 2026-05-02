@@ -13,6 +13,7 @@ namespace CatalogService.Application.DTOs.Response
         public string Address { get; set; }
         public string Description { get; set; }
         public int StarRating { get; set; }
+        public List<string> ImageUrls { get; set; } = new();
 
         public List<RoomTypeDto> RoomTypes { get; set; }
     }

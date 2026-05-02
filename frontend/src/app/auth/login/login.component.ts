@@ -59,8 +59,6 @@ export class LoginComponent implements OnInit {
           if (this.errorMessage?.toLowerCase().includes('verify your email')) {
             this.needsVerification = true;
           }
-          
-          this.toast.error(this.errorMessage ?? 'Login failed.');
         }
       });
     } else {
@@ -82,9 +80,8 @@ export class LoginComponent implements OnInit {
         this.toast.success('Verification OTP sent to your email.');
         this.router.navigate(['/verify-otp'], { queryParams: { email } });
       },
-      error: (err) => {
+      error: () => {
         this.isLoading = false;
-        this.toast.error(err.error?.message ?? 'Failed to send OTP.');
       }
     });
   }

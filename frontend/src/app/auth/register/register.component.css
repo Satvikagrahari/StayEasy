@@ -165,6 +165,28 @@ h1 {
 .strength.s2 span:nth-child(-n+2) { background: var(--warning); }
 .strength.s3 span:nth-child(-n+3) { background: var(--primary); }
 .strength.s4 span { background: var(--success); }
+  
+.password-requirements {
+  margin: 4px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.password-requirements p {
+  font-size: 11px;
+  color: var(--neutral-400);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+
+.password-requirements p.met {
+  color: var(--success);
+  font-weight: 600;
+}
 
 .terms-row {
   display: flex;

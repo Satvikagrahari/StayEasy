@@ -28,6 +28,7 @@ namespace CatalogService.Application.Services
                 Address = request.Address,
                 Description = request.Description,
                 StarRating = request.StarRating,
+                ImageUrls = request.ImageUrls?.Where(url => !string.IsNullOrWhiteSpace(url)).ToList() ?? new List<string>(),
                 IsActive = true
             };
 
@@ -65,6 +66,7 @@ namespace CatalogService.Application.Services
                 Address = h.Address,
                 Description = h.Description,
                 StarRating = h.StarRating,
+                ImageUrls = h.ImageUrls ?? new List<string>(),
 
                 RoomTypes = h.RoomTypes.Select(r => new RoomTypeDto
                 {
@@ -117,6 +119,7 @@ namespace CatalogService.Application.Services
                 Address = hotel.Address,
                 Description = hotel.Description,
                 StarRating = hotel.StarRating,
+                ImageUrls = hotel.ImageUrls ?? new List<string>(),
                 RoomTypes = hotel.RoomTypes.Select(r => new RoomTypeDto
                 {
                     RoomTypeId = r.RoomTypeId,
@@ -214,6 +217,20 @@ namespace CatalogService.Application.Services
                 room.Status = request.Status;
             }
 
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteRoomTypeAsync(Guid roomTypeId)
+        {
+            var room = await _context.RoomTypes
+                .Include(r => r.Hotel)
+                .FirstOrDefaultAsync(r => r.RoomTypeId == roomTypeId && r.Hotel.IsActive);
+
+            if (room == null)
+                return false;
+
+            _context.RoomTypes.Remove(room);
             await _context.SaveChangesAsync();
             return true;
         }

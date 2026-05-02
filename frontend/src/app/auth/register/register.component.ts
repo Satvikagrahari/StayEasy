@@ -5,7 +5,6 @@ import { Router, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { SignupRequest } from '../../core/models/auth.models';
-import { ToastService } from '../../core/services/toast.service';
 
 export function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
   return group.get('password')?.value === group.get('confirmPassword')?.value ? null : { passwordMismatch: true };
@@ -22,7 +21,6 @@ export class RegisterComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
-  private toast = inject(ToastService);
 
   registerForm = this.fb.group(
     {
@@ -44,6 +42,22 @@ export class RegisterComponent {
   get passwordMismatch(): boolean {
     return this.registerForm.hasError('passwordMismatch') &&
       (this.registerForm.get('confirmPassword')?.touched ?? false);
+  }
+
+  get passwordValue(): string {
+    return this.registerForm.get('password')?.value ?? '';
+  }
+
+  get hasMinLength(): boolean {
+    return this.passwordValue.length >= 8;
+  }
+
+  get hasUpperCase(): boolean {
+    return /[A-Z]/.test(this.passwordValue);
+  }
+
+  get hasDigit(): boolean {
+    return /\d/.test(this.passwordValue);
   }
 
   passwordStrength(): { score: number; label: string } {
@@ -87,7 +101,6 @@ export class RegisterComponent {
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.error?.message ?? 'Registration failed. Please try again.';
-        this.toast.error(this.errorMessage ?? 'Registration failed.');
       }
     });
   }

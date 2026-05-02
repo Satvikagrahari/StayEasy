@@ -48,7 +48,7 @@ export class ManageBookingsComponent implements OnInit {
     this.actionId.set(id);
     this.adminApi.updateBookingStatus(id, status).subscribe({
       next: () => { this.actionId.set(null); this.toast.success('Status updated.'); this.load(); },
-      error: (err) => { this.actionId.set(null); this.toast.error(err.error?.message ?? 'Update failed.'); }
+      error: () => { this.actionId.set(null); }
     });
   }
 
@@ -56,7 +56,7 @@ export class ManageBookingsComponent implements OnInit {
     this.actionId.set(id);
     this.adminApi.approveRefund(id).subscribe({
       next: () => { this.actionId.set(null); this.toast.success('Refund approved.'); this.load(); },
-      error: (err) => { this.actionId.set(null); this.toast.error(err.error?.message ?? 'Failed.'); }
+      error: () => { this.actionId.set(null); }
     });
   }
 

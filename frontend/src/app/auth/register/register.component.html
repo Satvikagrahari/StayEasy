@@ -25,19 +25,40 @@
         <label class="input-wrap" [class.invalid]="registerForm.get('userName')?.invalid && registerForm.get('userName')?.touched">
           <span>👤</span><input type="text" formControlName="userName" placeholder="Username" />
         </label>
+        @if (registerForm.get('userName')?.invalid && registerForm.get('userName')?.touched) {
+          @if (registerForm.get('userName')?.hasError('required')) { <div class="error-message">Username is required.</div> }
+          @if (registerForm.get('userName')?.hasError('minlength')) { <div class="error-message">Username must be at least 3 characters.</div> }
+        }
 
         <label class="input-wrap" [class.invalid]="registerForm.get('phoneNumber')?.invalid && registerForm.get('phoneNumber')?.touched">
           <span>☎</span><input type="tel" formControlName="phoneNumber" placeholder="Phone number" />
         </label>
-        <div class="hint">Use 10 to 15 digits, without spaces.</div>
+        @if (registerForm.get('phoneNumber')?.invalid && registerForm.get('phoneNumber')?.touched) {
+          <div class="error-message">Please enter a valid 10-15 digit phone number.</div>
+        } @else {
+          <div class="hint">Use 10 to 15 digits, without spaces.</div>
+        }
 
         <label class="input-wrap" [class.invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
           <span>🔒</span><input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Password" />
           <button type="button" (click)="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
         </label>
+        
+        <div class="password-requirements">
+          <p [class.met]="hasMinLength">
+            {{ hasMinLength ? '✓' : '○' }} At least 8 characters
+          </p>
+          <p [class.met]="hasUpperCase">
+            {{ hasUpperCase ? '✓' : '○' }} At least one uppercase letter
+          </p>
+          <p [class.met]="hasDigit">
+            {{ hasDigit ? '✓' : '○' }} At least one digit
+          </p>
+        </div>
+
         <div class="strength" [class.s1]="passwordStrength().score === 1" [class.s2]="passwordStrength().score === 2" [class.s3]="passwordStrength().score === 3" [class.s4]="passwordStrength().score === 4">
           <div><span></span><span></span><span></span><span></span></div>
-          <p>Password strength: {{ passwordStrength().label }}</p>
+          <p>Overall security: {{ passwordStrength().label }}</p>
         </div>
 
         <label class="input-wrap" [class.invalid]="passwordMismatch">

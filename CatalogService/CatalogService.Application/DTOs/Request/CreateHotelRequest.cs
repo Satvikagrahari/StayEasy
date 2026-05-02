@@ -22,5 +22,7 @@ namespace CatalogService.Application.DTOs.Request
         public int StarRating { get; set; }
         [Required]
         public string Country { get; set; }
+
+        public List<string>? ImageUrls { get; set; }
     }
 }

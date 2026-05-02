@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HotelApiService } from '../../core/services/hotel-api.service';
@@ -37,7 +37,8 @@ export class HotelsComponent implements OnInit {
     country: ['', [Validators.required, Validators.minLength(2)]],
     address: ['', Validators.required],
     description: [''],
-    starRating: [3, [Validators.required, Validators.min(1), Validators.max(5)]]
+    starRating: [3, [Validators.required, Validators.min(1), Validators.max(5)]],
+    imageUrls: this.fb.array([this.fb.control('')])
   });
 
   roomDraft = {
@@ -69,6 +70,7 @@ export class HotelsComponent implements OnInit {
   openCreate(): void {
     this.editingId.set(null);
     this.hotelForm.reset({ description: '', starRating: 3 });
+    this.setImageFields(['']);
     this.roomDraft = { name: '', description: '', capacity: 2, price: 6000, availability: 5 };
     this.showForm.set(true);
   }
@@ -83,6 +85,7 @@ export class HotelsComponent implements OnInit {
       description: hotel.description,
       starRating: hotel.starRating || 3
     });
+    this.setImageFields([]);
     this.showForm.set(true);
   }
 
@@ -94,16 +97,19 @@ export class HotelsComponent implements OnInit {
 
     this.saving.set(true);
     const value = this.hotelForm.getRawValue();
+    const id = this.editingId();
     const request: CreateHotelRequest = {
       name: value.name!,
       city: value.city!,
       country: value.country!,
       address: value.address!,
       description: value.description ?? '',
-      starRating: Number(value.starRating)
+      starRating: Number(value.starRating),
+      imageUrls: id ? undefined : this.imageUrls.controls
+        .map(control => (control.value ?? '').trim())
+        .filter(url => !!url)
     };
 
-    const id = this.editingId();
     const op = id ? this.hotelApi.updateHotel(id, request) : this.hotelApi.createHotel(request);
 
     op.subscribe({
@@ -113,9 +119,8 @@ export class HotelsComponent implements OnInit {
         this.toast.success(id ? 'Hotel updated.' : 'Hotel created.');
         this.load();
       },
-      error: err => {
+      error: () => {
         this.saving.set(false);
-        this.toast.error(err.error?.message ?? 'Save failed.');
       }
     });
   }
@@ -125,12 +130,11 @@ export class HotelsComponent implements OnInit {
     this.hotelApi.deleteHotel(id).subscribe({
       next: () => {
         this.deletingId.set(null);
-        this.toast.success('Hotel deactivated.');
+        this.toast.success('Hotel deleted.');
         this.load();
       },
-      error: err => {
+      error: () => {
         this.deletingId.set(null);
-        this.toast.error(err.error?.message ?? 'Delete failed.');
       }
     });
   }
@@ -162,6 +166,23 @@ export class HotelsComponent implements OnInit {
 
   ratingValue(): number {
     return Number(this.hotelForm.value.starRating ?? 0);
+  }
+
+  get imageUrls(): FormArray {
+    return this.hotelForm.get('imageUrls') as FormArray;
+  }
+
+  addImageField(): void {
+    this.imageUrls.push(this.fb.control(''));
+  }
+
+  removeImageField(index: number): void {
+    this.imageUrls.removeAt(index);
+  }
+
+  private setImageFields(urls: string[]): void {
+    this.imageUrls.clear();
+    urls.forEach(url => this.imageUrls.push(this.fb.control(url)));
   }
 
   manageRooms(hotel: Hotel): void {

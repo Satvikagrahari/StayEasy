@@ -69,8 +69,7 @@ export class AccountCenterComponent implements OnInit {
         this.isSaving.set(false);
         this.loadProfile();
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Failed to update account details.');
+      error: () => {
         this.isSaving.set(false);
       }
     });

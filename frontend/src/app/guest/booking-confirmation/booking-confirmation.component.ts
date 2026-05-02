@@ -45,10 +45,7 @@ export class BookingConfirmationComponent implements OnInit {
         link.click();
         window.URL.revokeObjectURL(url);
       },
-      error: (err) => {
-        console.error('Download failed', err);
-        alert('Failed to download invoice. Please try again later.');
-      }
+      error: () => undefined
     });
   }
 }

@@ -46,7 +46,7 @@ export class UsersComponent implements OnInit {
         this.toast.success(user.isActive ? 'User deactivated.' : 'User activated.');
         this.load();
       },
-      error: (err) => { this.actionId.set(null); this.toast.error(err.error?.message ?? 'Action failed.'); }
+      error: () => { this.actionId.set(null); }
     });
   }
 
@@ -54,7 +54,7 @@ export class UsersComponent implements OnInit {
     this.actionId.set(id);
     this.adminApi.deleteUser(id).subscribe({
       next: () => { this.actionId.set(null); this.toast.success('User deleted.'); this.load(); },
-      error: (err) => { this.actionId.set(null); this.toast.error(err.error?.message ?? 'Delete failed.'); }
+      error: () => { this.actionId.set(null); }
     });
   }
 

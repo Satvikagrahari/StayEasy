@@ -22,5 +22,6 @@ namespace CatalogService.Application.Interfaces.Services
         Task<bool> UpdateHotelAsync(Guid id, UpdateHotelRequest request);
         Task<bool> DeactivateHotelAsync(Guid id);
         Task<bool> UpdateRoomTypeAsync(Guid roomTypeId, UpdateRoomTypeRequest request);
+        Task<bool> DeleteRoomTypeAsync(Guid roomTypeId);
     }
 }

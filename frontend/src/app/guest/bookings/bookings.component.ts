@@ -42,7 +42,7 @@ export class BookingsComponent implements OnInit {
     this.actionId.set(id);
     this.bookingApi.cancelBooking(id).subscribe({
       next: () => { this.actionId.set(null); this.toast.success('Booking cancelled.'); this.load(); },
-      error: (err) => { this.actionId.set(null); this.toast.error(err.error?.message ?? 'Failed to cancel.'); }
+      error: () => { this.actionId.set(null); }
     });
   }
 
@@ -116,7 +116,7 @@ export class BookingsComponent implements OnInit {
     this.actionId.set(id);
     this.bookingApi.requestRefund(id).subscribe({
       next: () => { this.actionId.set(null); this.toast.success('Refund requested.'); this.load(); },
-      error: (err) => { this.actionId.set(null); this.toast.error(err.error?.message ?? 'Failed to request refund.'); }
+      error: () => { this.actionId.set(null); }
     });
   }
 
@@ -162,7 +162,7 @@ export class BookingsComponent implements OnInit {
         link.click();
         window.URL.revokeObjectURL(url);
       },
-      error: () => this.toast.error('Failed to download invoice.')
+      error: () => undefined
     });
   }
 }

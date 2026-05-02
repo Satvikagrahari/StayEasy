@@ -86,7 +86,10 @@
                 <td>{{ room.totalRooms }}</td>
                 <td>{{ room.availableRooms }}</td>
                 <td><span [class]="room.status === 'Inactive' ? 'badge badge-danger' : 'badge badge-success'">{{ room.status || 'Active' }}</span></td>
-                <td><button class="btn btn-secondary btn-sm" (click)="openEdit(room)">Edit</button></td>
+                <td class="actions-cell">
+                  <button class="btn btn-secondary btn-sm" (click)="openEdit(room)">Edit</button>
+                  <button class="btn btn-danger btn-sm" (click)="deleteTarget.set(room)" [disabled]="deletingRoomId() === room.roomTypeId">Delete</button>
+                </td>
               </tr>
             }
           </tbody>
@@ -94,4 +97,17 @@
       </div>
     }
   }
+}
+
+@if (deleteTarget(); as room) {
+  <div class="modal-backdrop">
+    <div class="confirm-modal card">
+      <h2>Delete {{ room.name }}?</h2>
+      <p>This will remove the room type from the selected hotel.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="deleteTarget.set(null)">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmDeleteRoom()">Delete</button>
+      </div>
+    </div>
+  </div>
 }

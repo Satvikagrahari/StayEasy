@@ -17,6 +17,7 @@ export interface Hotel {
   address: string;
   description: string;
   starRating: number;
+  imageUrls?: string[];
   roomTypes: RoomType[];
 }
 
@@ -27,6 +28,7 @@ export interface CreateHotelRequest {
   address: string;
   description: string;
   starRating: number;
+  imageUrls?: string[];
 }
 
 export interface CreateRoomTypeRequest {

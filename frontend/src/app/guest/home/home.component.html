@@ -94,7 +94,7 @@
                 @if (hasHighDemand(hotel)) { <span class="high-demand-ribbon">HIGH DEMAND</span> }
                 <span class="room-badge">{{ primaryRoom(hotel) }}</span>
                 <span class="rating-badge">⭐ {{ rating(hotel) }}.0</span>
-                <strong>{{ hotelInitials(hotel) }}</strong>
+                <img class="hotel-photo" [src]="hotel.imageUrls?.[0] || 'assets/no-image.png'" [alt]="hotel.name" />
                 @if (lowAvailability(hotel); as left) { <span class="only-left-badge">🔴 Only {{ left }} left!</span> }
               </div>
               <div class="hotel-body">

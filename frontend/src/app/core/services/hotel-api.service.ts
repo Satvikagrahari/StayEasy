@@ -10,6 +10,7 @@ const normalizeHotel = (hotel: Hotel): Hotel => ({
   address: hotel.address ?? '',
   description: hotel.description ?? '',
   starRating: hotel.starRating ?? 0,
+  imageUrls: hotel.imageUrls ?? [],
   roomTypes: hotel.roomTypes ?? []
 });
 
@@ -47,7 +48,7 @@ export class HotelApiService {
   }
 
   deleteHotel(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.BASE}/${id}`);
+    return this.http.delete<void>(`${this.BASE}/delete/hotel/${id}`);
   }
 
   createRoomType(request: CreateRoomTypeRequest): Observable<string> {
@@ -56,5 +57,9 @@ export class HotelApiService {
 
   updateRoomType(id: string, request: UpdateRoomTypeRequest): Observable<void> {
     return this.http.put<void>(`${this.BASE}/rooms/${id}`, request);
+  }
+
+  deleteRoomType(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.BASE}/delete/roomtype/${id}`);
   }
 }

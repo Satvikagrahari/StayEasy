@@ -213,7 +213,14 @@
   height: 200px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   color: #fff;
+}
+
+.hotel-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .gradient-beach { background: linear-gradient(135deg, #0EA5E9, #0284C7); }
@@ -233,6 +240,7 @@
 .room-badge,
 .urgency-badge {
   position: absolute;
+  z-index: 3;
   font-weight: 700;
 }
 
@@ -289,6 +297,7 @@
   position: absolute;
   left: 10px;
   bottom: 10px;
+  z-index: 3;
   padding: 4px 10px;
   border-radius: 20px;
   background: var(--danger-light);
@@ -418,6 +427,7 @@
   height: 140px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   border-radius: var(--radius-md);
 }
 

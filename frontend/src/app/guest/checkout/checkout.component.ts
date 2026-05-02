@@ -56,9 +56,8 @@ export class CheckoutComponent implements OnInit {
       next: (res: any) => {
         this.initiateRazorpay(res.bookingId);
       },
-      error: (err: any) => {
+      error: () => {
         this.placing.set(false);
-        this.toast.error(err.error?.message ?? 'Checkout failed.');
       }
     });
   }
@@ -95,9 +94,8 @@ export class CheckoutComponent implements OnInit {
         const rzp = new Razorpay(options);
         rzp.open();
       },
-      error: (err: any) => {
+      error: () => {
         this.placing.set(false);
-        this.toast.error('Failed to initialize payment gateway.');
       }
     });
   }
@@ -118,9 +116,8 @@ export class CheckoutComponent implements OnInit {
         this.confirmedBookingId.set(bookingId);
         this.checkoutStep.set(3);
       },
-      error: (err: any) => {
+      error: () => {
         this.placing.set(false);
-        this.toast.error(err.error?.message ?? 'Payment verification failed.');
       }
     });
   }
@@ -173,7 +170,7 @@ export class CheckoutComponent implements OnInit {
         link.click();
         window.URL.revokeObjectURL(url);
       },
-      error: () => this.toast.error('Failed to download invoice.')
+      error: () => undefined
     });
   }
 }
