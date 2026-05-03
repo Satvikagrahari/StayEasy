@@ -72,7 +72,6 @@
           <span>Rating</span>
           @for (s of [1,2,3,4,5]; track s) { <button type="button" [class.active]="s <= ratingValue()" (click)="setRating(s)">★</button> }
         </div>
-        @if (!editingId()) {
           <div class="image-url-section" formArrayName="imageUrls">
             <div class="image-url-header">
               <span>Image URLs</span>
@@ -85,15 +84,16 @@
               </div>
             }
           </div>
-          <div class="room-note">Starter room fields are captured for planning; create room types from Manage Rooms after the hotel is saved.</div>
-          <label>Room type name<input [(ngModel)]="roomDraft.name" [ngModelOptions]="{standalone:true}" /></label>
-          <label>Room description<textarea rows="3" [(ngModel)]="roomDraft.description" [ngModelOptions]="{standalone:true}"></textarea></label>
-          <div class="three-col">
-            <label>Capacity<input type="number" [(ngModel)]="roomDraft.capacity" [ngModelOptions]="{standalone:true}" /></label>
-            <label>Price<input type="number" [(ngModel)]="roomDraft.price" [ngModelOptions]="{standalone:true}" /></label>
-            <label>Availability<input type="number" [(ngModel)]="roomDraft.availability" [ngModelOptions]="{standalone:true}" /></label>
-          </div>
-        }
+          @if (!editingId()) {
+            <div class="room-note">Starter room fields are captured for planning; create room types from Manage Rooms after the hotel is saved.</div>
+            <label>Room type name<input [(ngModel)]="roomDraft.name" [ngModelOptions]="{standalone:true}" /></label>
+            <label>Room description<textarea rows="3" [(ngModel)]="roomDraft.description" [ngModelOptions]="{standalone:true}"></textarea></label>
+            <div class="three-col">
+              <label>Capacity<input type="number" [(ngModel)]="roomDraft.capacity" [ngModelOptions]="{standalone:true}" /></label>
+              <label>Price<input type="number" [(ngModel)]="roomDraft.price" [ngModelOptions]="{standalone:true}" /></label>
+              <label>Availability<input type="number" [(ngModel)]="roomDraft.availability" [ngModelOptions]="{standalone:true}" /></label>
+            </div>
+          }
         <div class="slide-actions">
           <button type="button" class="btn btn-ghost" (click)="showForm.set(false)">Cancel</button>
           <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save Changes' }}</button>

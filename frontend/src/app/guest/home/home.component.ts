@@ -28,6 +28,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   promoCopied = signal(false);
   destinations = ['Goa', 'Jaipur', 'Manali', 'Udaipur', 'Mumbai', 'Delhi', 'Bangalore', 'Jaisalmer'];
   search = { destination: '', checkIn: '', checkOut: '', email: '' };
+  readonly today = new Date().toISOString().split('T')[0];
   private promoTimer?: ReturnType<typeof setTimeout>;
 
   ngOnInit(): void {
@@ -151,5 +152,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (text.includes('restaurant') || text.includes('dining')) pills.push('🍽️ Restaurant');
     if (pills.length < 3) pills.push('🅿️ Parking', '🍽️ Restaurant');
     return [...new Set(pills)].slice(0, 3);
+  }
+
+  get minCheckOutDate(): string {
+    if (!this.search.checkIn) return this.today;
+    const d = new Date(this.search.checkIn);
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  }
+
+  onCheckInChange(): void {
+    if (this.search.checkIn && this.search.checkOut && this.search.checkOut <= this.search.checkIn) {
+      this.search.checkOut = this.minCheckOutDate;
+    }
   }
 }

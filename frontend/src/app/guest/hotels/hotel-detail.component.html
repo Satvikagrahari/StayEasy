@@ -42,8 +42,7 @@
     <main class="detail-main">
       <section class="card content-card">
         <h2>About this hotel</h2>
-        <p>{{ h.description || 'A comfortable StayEasy hotel with curated rooms, flexible stays, and everything you need
-          for a smooth trip.' }}</p>
+        <p>{{ h.description || 'A comfortable StayEasy hotel with curated rooms, flexible stays, and everything you need for a smooth trip.' }}</p>
       </section>
 
       <section class="card content-card">
@@ -57,8 +56,27 @@
 
       <section class="card content-card">
         <h2>Where you'll be</h2>
-        <p class="map-address">📍 {{ h.address || (h.city + ', ' + h.country) }}</p>
-        <div class="map-box">🗺️ {{ h.address || (h.city + ', ' + (h.country || 'India')) }}</div>
+        <p class="map-address">📍 {{ hotelLocationLabel(h) || (h.city + ', ' + h.country) }}</p>
+        <div class="map-shell">
+          <div class="map-box">
+            @if (sanitizedMapUrl(); as mapUrl) {
+              <iframe
+                width="100%"
+                height="100%"
+                style="border:0"
+                loading="lazy"
+                allowfullscreen
+                referrerpolicy="no-referrer-when-downgrade"
+                [src]="mapUrl">
+              </iframe>
+            } @else {
+              <div class="map-state">
+                <strong>Loading map</strong>
+                <span>Pinpointing hotel location...</span>
+              </div>
+            }
+          </div>
+        </div>
       </section>
 
       <section class="card content-card">
@@ -66,8 +84,7 @@
         <div class="review-summary">
           <strong>{{ rating() }}.0<span>/5</span></strong>
           <div>
-            <div class="stars">@for (star of [1,2,3,4,5]; track star) { <span [class.empty]="star > rating()">{{ star <=
-                  rating() ? '★' : '☆' }}</span> }</div>
+            <div class="stars">@for (star of [1,2,3,4,5]; track star) { <span [class.empty]="star > rating()">{{ star <= rating() ? '★' : '☆' }}</span> }</div>
             <p>Based on recent StayEasy guest feedback</p>
           </div>
         </div>
@@ -101,18 +118,16 @@
           (click)="selectRoom(room)" [disabled]="room.availableRooms <= 0 || room.status === 'Inactive'">
           <strong>{{ room.name }}</strong>
           <span>👥 Up to {{ room.maxGuests || 1 }} · {{ room.pricePerNight | currency:'INR':'symbol':'1.0-0' }}</span>
-          <em [class.soldout]="room.availableRooms <= 0">{{ room.availableRooms > 0 ? room.availableRooms + ' rooms
-            left' : 'Sold out' }}</em>
-          @if (roomLowAvailability(room)) { <small class="room-left-badge">🔴 Only {{ room.availableRooms }}
-            left!</small> }
+          <em [class.soldout]="room.availableRooms <= 0">{{ room.availableRooms > 0 ? room.availableRooms + ' rooms left' : 'Sold out' }}</em>
+          @if (roomLowAvailability(room)) { <small class="room-left-badge">🔴 Only {{ room.availableRooms }} left!</small> }
         </button>
         }
       </div>
 
       <form [formGroup]="cartForm" (ngSubmit)="addToCart()">
         <div class="date-row">
-          <label><span>Check-in</span><input type="date" formControlName="checkInDate" [min]="today" /></label>
-          <label><span>Check-out</span><input type="date" formControlName="checkOutDate" [min]="today" /></label>
+          <label><span>Check-in</span><input type="date" formControlName="checkInDate" [min]="today" (change)="onCheckInChange()" /></label>
+          <label><span>Check-out</span><input type="date" formControlName="checkOutDate" [min]="minCheckOutDate" /></label>
         </div>
         @if (formError()) { <div class="inline-error">{{ formError() }}</div> }
 
@@ -127,8 +142,7 @@
 
         @if (nights() > 0 && selectedRoom()) {
         <div class="price-breakdown">
-          <p><span>{{ selectedRoom()!.pricePerNight | currency:'INR':'symbol':'1.0-0' }} × {{ nights() }}
-              nights</span><strong>{{ roomSubtotal() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
+          <p><span>{{ selectedRoom()!.pricePerNight | currency:'INR':'symbol':'1.0-0' }} × {{ nights() }} nights</span><strong>{{ roomSubtotal() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
           <p><span>Taxes & fees</span><strong>{{ taxes() | currency:'INR':'symbol':'1.0-0' }}</strong></p>
           <div></div>
           <p class="total"><span>Total</span><strong>{{ total() | currency:'INR':'symbol':'1.0-0' }}</strong></p>

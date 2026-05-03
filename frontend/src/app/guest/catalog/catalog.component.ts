@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HotelApiService } from '../../core/services/hotel-api.service';
 import { Hotel } from '../../core/models/hotel.models';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-catalog',
@@ -12,7 +13,7 @@ import { Hotel } from '../../core/models/hotel.models';
   templateUrl: './catalog.component.html',
   styleUrl: './catalog.component.css'
 })
-export class CatalogComponent implements OnInit {
+export class CatalogComponent implements OnInit, OnDestroy {
   private hotelApi = inject(HotelApiService);
   private route = inject(ActivatedRoute);
 
@@ -31,11 +32,18 @@ export class CatalogComponent implements OnInit {
   checkOutDate = '';
   availableRoomTypes = signal<string[]>([]);
   private debounceId: ReturnType<typeof setTimeout> | null = null;
+  private queryParamsSub?: Subscription;
 
   ngOnInit(): void {
-    this.searchTerm = this.route.snapshot.queryParamMap.get('city') ?? '';
-    this.checkInDate = this.route.snapshot.queryParamMap.get('checkIn') ?? '';
-    this.checkOutDate = this.route.snapshot.queryParamMap.get('checkOut') ?? '';
+    this.queryParamsSub = this.route.queryParams.subscribe(params => {
+      this.searchTerm = params['city'] ?? '';
+      this.checkInDate = params['checkIn'] ?? '';
+      this.checkOutDate = params['checkOut'] ?? '';
+      if (this.hotels().length > 0) {
+        this.applyFilters();
+      }
+    });
+
     this.hotelApi.getHotels().subscribe({
       next: (data) => {
         this.hotels.set(data);
@@ -48,6 +56,10 @@ export class CatalogComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.queryParamsSub?.unsubscribe();
   }
 
   hotelQueryParams(): Record<string, string> | null {

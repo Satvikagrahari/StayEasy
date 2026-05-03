@@ -13,5 +13,6 @@ export const GUEST_ROUTES: Routes = [
   { path: 'booking-confirmation/:bookingId', canActivate: [authGuard], loadComponent: () => import('./booking-confirmation/booking-confirmation.component').then(m => m.BookingConfirmationComponent) },
   { path: 'bookings', canActivate: [authGuard, nonAdminGuard], loadComponent: () => import('./bookings/bookings.component').then(m => m.BookingsComponent) },
   { path: 'my-bookings', canActivate: [authGuard, nonAdminGuard], loadComponent: () => import('./bookings/bookings.component').then(m => m.BookingsComponent) },
+  { path: 'info', loadComponent: () => import('./info/info.component').then(m => m.InfoComponent) },
   { path: '', redirectTo: 'home', pathMatch: 'full' }
 ];

@@ -12,7 +12,7 @@
           <h1>{{ pageTitle() }}</h1>
         </div>
         <div class="admin-topbar-right">
-          <button type="button" class="notification-bell" aria-label="Notifications">🔔</button>
+          <!-- <button type="button" class="notification-bell" aria-label="Notifications">🔔</button> -->
           @if (currentUser$ | async; as user) {
             <span>{{ user.username || 'Admin' }}</span>
           }

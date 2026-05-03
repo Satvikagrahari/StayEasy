@@ -1,14 +1,17 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, ViewChild, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HotelApiService } from '../../core/services/hotel-api.service';
 import { BookingApiService } from '../../core/services/booking-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CartService } from '../../core/services/cart.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Hotel, RoomType } from '../../core/models/hotel.models';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-hotel-detail',
@@ -22,12 +25,14 @@ export class HotelDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private http = inject(HttpClient);
   private hotelApi = inject(HotelApiService);
   private bookingApi = inject(BookingApiService);
   private toast = inject(ToastService);
   private cartService = inject(CartService);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
+  private sanitizer = inject(DomSanitizer);
 
   hotel = signal<Hotel | null>(null);
   isLoading = signal(true);
@@ -39,8 +44,11 @@ export class HotelDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   viewingNow = signal(0);
   viewingPulse = signal(false);
   showStickyPriceBar = signal(false);
+  sanitizedMapUrl = signal<SafeResourceUrl | null>(null);
+
   private viewingTimer?: ReturnType<typeof setInterval>;
   private stickyObserver?: IntersectionObserver;
+  private viewReady = false;
 
   today = new Date().toISOString().split('T')[0];
 
@@ -66,6 +74,7 @@ export class HotelDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         this.selectedRoom.set(h.roomTypes?.find(room => room.availableRooms > 0 && room.status !== 'Inactive') ?? h.roomTypes?.[0] ?? null);
         this.viewingNow.set(this.hotelHash() % 7 + 3);
         this.isLoading.set(false);
+        this.updateMapUrl();
         setTimeout(() => this.initStickyObserver(), 0);
       },
       error: () => { this.error.set('Hotel not found.'); this.isLoading.set(false); }
@@ -134,7 +143,25 @@ export class HotelDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  get minCheckOutDate(): string {
+    const checkIn = this.cartForm.get('checkInDate')?.value;
+    if (!checkIn) return this.today;
+    const d = new Date(checkIn);
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  }
+
+  onCheckInChange(): void {
+    const checkIn = this.cartForm.get('checkInDate')?.value;
+    const checkOut = this.cartForm.get('checkOutDate')?.value;
+    if (checkIn && checkOut && checkOut <= checkIn) {
+      this.cartForm.patchValue({ checkOutDate: this.minCheckOutDate });
+    }
+  }
+
   ngAfterViewInit(): void {
+    this.viewReady = true;
+    this.updateMapUrl();
     this.viewingTimer = setInterval(() => {
       const delta = this.hotelHash() % 2 === 0 ? 1 : -1;
       this.viewingNow.set(Math.max(3, this.viewingNow() + delta));
@@ -218,6 +245,18 @@ export class HotelDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   rating(): number {
     return Math.max(1, Math.min(5, Math.round(this.hotel()?.starRating || 4)));
+  }
+
+  hotelLocationLabel(hotel: Hotel | null = this.hotel()): string {
+    if (!hotel) return '';
+    return [hotel.address, hotel.city, hotel.country].filter(Boolean).join(', ');
+  }
+
+  updateMapUrl(): void {
+    const address = this.hotelLocationLabel();
+    if (!address) return;
+    const url = `https://www.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    this.sanitizedMapUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
   }
 
   amenities(): string[] {

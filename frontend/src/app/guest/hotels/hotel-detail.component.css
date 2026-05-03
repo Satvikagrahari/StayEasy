@@ -201,15 +201,59 @@
   margin-bottom: 12px;
 }
 
-.map-box {
-  height: 200px;
+.map-shell {
   display: grid;
-  place-items: center;
-  padding: 18px;
+  gap: 10px;
+}
+
+.map-box {
+  position: relative;
+  min-height: 260px;
+  overflow: hidden;
   border-radius: var(--radius-md);
   background: var(--neutral-100);
-  color: var(--neutral-500);
+}
+
+.leaflet-map {
+  width: 100%;
+  min-height: 260px;
+}
+
+.leaflet-map.is-hidden {
+  visibility: hidden;
+}
+
+.map-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  padding: 24px;
+  background: rgba(248, 250, 252, .92);
+  color: var(--neutral-600);
   text-align: center;
+}
+
+.map-state strong {
+  color: var(--neutral-800);
+  font-size: 16px;
+}
+
+.map-state span {
+  font-size: 13px;
+}
+
+.map-link {
+  width: max-content;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.map-link:hover {
+  text-decoration: underline;
 }
 
 .review-summary {

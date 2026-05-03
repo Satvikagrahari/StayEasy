@@ -28,7 +28,7 @@ builder.Services.AddDbContext<BookingDbContext>(options =>
 // ================= DI - Application Services =================
 builder.Services.AddScoped<IBookingService, BookingService.Infrastructure.Services.BookingService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
-builder.Services.AddHttpClient<ICartService, CartService>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 // ================= Email + Identity HTTP Client =================
 builder.Services.AddScoped<IEmailService, EmailService>();

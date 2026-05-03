@@ -5,7 +5,6 @@ using BookingService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Net.Http.Json;
 using System.Text;
 
 namespace BookingService.Infrastructure.Services
@@ -15,12 +14,12 @@ namespace BookingService.Infrastructure.Services
     public class CartService : ICartService
     {
         private readonly BookingDbContext _context;
-        private readonly HttpClient _httpClient;
+        private readonly ICatalogClient _catalogClient;
 
-        public CartService(BookingDbContext context, HttpClient httpClient)
+        public CartService(BookingDbContext context, ICatalogClient catalogClient)
         {
             _context = context;
-            _httpClient = httpClient;
+            _catalogClient = catalogClient;
 
         }
 
@@ -46,8 +45,7 @@ namespace BookingService.Infrastructure.Services
                 await _context.Carts.AddAsync(cart);
                 await _context.SaveChangesAsync();
             }
-            var room = await _httpClient.GetFromJsonAsync<RoomTypeDto>(
-                $"https://localhost:7092/api/hotels/rooms/{request.RoomTypeId}");
+            var room = await _catalogClient.GetRoomTypeAsync(request.RoomTypeId);
 
             if (room == null)
                 throw new Exception("Room not found");

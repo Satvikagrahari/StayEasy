@@ -85,7 +85,7 @@ export class HotelsComponent implements OnInit {
       description: hotel.description,
       starRating: hotel.starRating || 3
     });
-    this.setImageFields([]);
+    this.setImageFields(hotel.imageUrls || []);
     this.showForm.set(true);
   }
 
@@ -105,7 +105,7 @@ export class HotelsComponent implements OnInit {
       address: value.address!,
       description: value.description ?? '',
       starRating: Number(value.starRating),
-      imageUrls: id ? undefined : this.imageUrls.controls
+      imageUrls: this.imageUrls.controls
         .map(control => (control.value ?? '').trim())
         .filter(url => !!url)
     };
@@ -116,11 +116,13 @@ export class HotelsComponent implements OnInit {
       next: () => {
         this.saving.set(false);
         this.showForm.set(false);
-        this.toast.success(id ? 'Hotel updated.' : 'Hotel created.');
+        this.toast.success(id ? 'Hotel updated successfully.' : 'Hotel created successfully.');
         this.load();
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
+        this.toast.error(id ? 'Failed to update hotel.' : 'Failed to create hotel.');
+        console.error('Save error:', err);
       }
     });
   }

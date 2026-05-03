@@ -1,4 +1,5 @@
 using BookingService.Application.Interfaces.Services;
+using BookingService.Application.DTOs.Request;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -41,6 +42,26 @@ namespace BookingService.Infrastructure.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch hotel name for hotelId {HotelId} from CatalogService.", hotelId);
+                return null;
+            }
+        }
+
+        public async Task<RoomTypeDto?> GetRoomTypeAsync(Guid roomTypeId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/hotels/rooms/{roomTypeId}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("CatalogService returned {StatusCode} for roomTypeId {RoomTypeId}.", response.StatusCode, roomTypeId);
+                    return null;
+                }
+
+                return await response.Content.ReadFromJsonAsync<RoomTypeDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch room type for roomTypeId {RoomTypeId} from CatalogService.", roomTypeId);
                 return null;
             }
         }

@@ -167,7 +167,9 @@ namespace CatalogService.Application.Services
             hotel.Address = request.Address;
             hotel.Description = request.Description;
             hotel.StarRating = request.StarRating;
+            hotel.ImageUrls = request.ImageUrls?.Where(url => !string.IsNullOrWhiteSpace(url)).ToList() ?? new List<string>();
 
+            _context.Entry(hotel).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return true;
         }

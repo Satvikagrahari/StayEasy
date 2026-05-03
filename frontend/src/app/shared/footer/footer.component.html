@@ -2,29 +2,39 @@
   <div class="footer-grid">
     <div>
       <div class="footer-logo">🏨 StayEasy</div>
-      <p class="tagline">Book beautiful stays with transparent pricing, fast checkout, and support that actually shows up.</p>
-      <div class="socials"><span></span><span></span><span></span></div>
+      <p class="tagline">Book beautiful stays with transparent pricing, fast checkout, and support that actually shows
+        up.</p>
+      <div class="socials">
+        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+        </a>
+        <a href="https://meta.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Meta">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+        </a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="LinkedIn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+        </a>
+      </div>
     </div>
     <div>
       <h4>Company</h4>
-      <a href="#">About</a>
-      <a href="#">Careers</a>
-      <a href="#">Press</a>
-      <a href="#">Blog</a>
+      <a routerLink="/info">About</a>
+      <a routerLink="/info">Press</a>
+      <a routerLink="/info">Blog</a>
     </div>
     <div>
       <h4>Support</h4>
-      <a href="#">Help Center</a>
-      <a href="#">Contact</a>
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms</a>
+      <a routerLink="/info">Help Center</a>
+      <a routerLink="/info">Contact</a>
+      <a routerLink="/info">Privacy Policy</a>
+      <a routerLink="/info">Terms</a>
     </div>
     <div>
       <h4>Popular Destinations</h4>
-      <a href="#">Goa</a>
-      <a href="#">Jaipur</a>
-      <a href="#">Manali</a>
-      <a href="#">Mumbai</a>
+      <a routerLink="/catalog" [queryParams]="{ city: 'Goa' }">Goa</a>
+      <a routerLink="/catalog" [queryParams]="{ city: 'Udaipur' }">Udaipur</a>
+      <a routerLink="/catalog" [queryParams]="{ city: 'Manali' }">Manali</a>
+      <a routerLink="/catalog" [queryParams]="{ city: 'Mumbai' }">Mumbai</a>
     </div>
   </div>
   <div class="footer-bottom">© {{ year }} StayEasy. All rights reserved.</div>

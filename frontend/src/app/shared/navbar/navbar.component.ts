@@ -97,6 +97,19 @@ export class NavbarComponent {
     return 'Add dates';
   }
 
+  get minCheckOutDate(): string {
+    if (!this.checkInDate) return this.today;
+    const d = new Date(this.checkInDate);
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  }
+
+  onCheckInChange(): void {
+    if (this.checkInDate && this.checkOutDate && this.checkOutDate <= this.checkInDate) {
+      this.checkOutDate = this.minCheckOutDate;
+    }
+  }
+
   private shortDate(value: string): string {
     return new Date(`${value}T00:00:00`).toLocaleDateString('en-IN', {
       day: 'numeric',

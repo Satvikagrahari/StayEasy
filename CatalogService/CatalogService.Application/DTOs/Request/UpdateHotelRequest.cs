@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace CatalogService.Application.DTOs.Request
@@ -19,5 +20,6 @@ namespace CatalogService.Application.DTOs.Request
         public string Description { get; set; }
 
         public int StarRating { get; set; }
+        public List<string>? ImageUrls { get; set; }
     }
 }
