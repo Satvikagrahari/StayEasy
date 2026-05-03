@@ -37,6 +37,12 @@ namespace BookingService.Application.IntegrationEvents
         public bool IsSuccess { get; set; }
         public DateTime ProcessedAt { get; set; }
     }
+
+    public class BookingPaymentFailedIntegrationEvent
+    {
+        public Guid BookingId { get; set; }
+        public List<BookingItemDto> BookingItems { get; set; } = new();
+    }
     
     public class RefundRequestedIntegrationEvent
     {

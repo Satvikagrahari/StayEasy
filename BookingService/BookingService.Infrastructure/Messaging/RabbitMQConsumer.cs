@@ -60,6 +60,11 @@ namespace BookingService.Infrastructure.Messaging
 
                         if (booking != null)
                         {
+                            // Load booking items once — needed for both success (email) and failure (inventory restore)
+                            var bookingItems = await db.BookingItems
+                                .Where(x => x.BookingId == booking.Id)
+                                .ToListAsync(stoppingToken);
+
                             if (paymentEvent.IsSuccess)
                             {
                                 booking.Status = BookingStatus.Confirmed;
@@ -67,11 +72,7 @@ namespace BookingService.Infrastructure.Messaging
                                 _logger.LogInformation("✓ Payment Successful. Booking {BookingId} is Confirmed.", paymentEvent.BookingId);
 
                                 // ── Send booking confirmation email ──────────────────
-                                var hotelId = await db.BookingItems
-                                    .Where(x => x.BookingId == booking.Id)
-                                    .Select(x => x.HotelId)
-                                    .FirstOrDefaultAsync(stoppingToken);
-
+                                var hotelId = bookingItems.Select(x => x.HotelId).FirstOrDefault();
                                 await SendConfirmationEmailAsync(scope, booking.UserId, hotelId, booking.Id, booking.TotalAmount, booking.BookingDate);
                                 // ────────────────────────────────────────────────────
                             }
@@ -79,7 +80,21 @@ namespace BookingService.Infrastructure.Messaging
                             {
                                 booking.Status = BookingStatus.Failed;
                                 await db.SaveChangesAsync(stoppingToken);
-                                _logger.LogInformation("❌ Payment Failed. Booking {BookingId} is Failed.", paymentEvent.BookingId);
+                                _logger.LogInformation("❌ Payment Failed. Booking {BookingId} marked as Failed. Publishing inventory restore event.", paymentEvent.BookingId);
+
+                                // ── Restore inventory — compensating transaction ──────
+                                var publisher = scope.ServiceProvider.GetRequiredService<IBookingPublisher>();
+                                var paymentFailedEvent = new BookingPaymentFailedIntegrationEvent
+                                {
+                                    BookingId = booking.Id,
+                                    BookingItems = bookingItems.Select(i => new BookingItemDto
+                                    {
+                                        RoomTypeId = i.RoomTypeId,
+                                        Nights = i.Nights
+                                    }).ToList()
+                                };
+                                await publisher.PublishEventAsync(paymentFailedEvent, "booking.payment-failed");
+                                // ─────────────────────────────────────────────────────
                             }
                             
                             _channel.BasicAck(ea.DeliveryTag, false);

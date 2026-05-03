@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -68,7 +69,7 @@ export class CheckoutComponent implements OnInit {
         const user = this.authService.getCurrentUser();
         
         const options = {
-          key: 'rzp_test_SjpKvwYMyXTnGg', // This should ideally come from environment or backend
+          key: environment.razorpayKey,
           amount: this.payableTotal() * 100,
           currency: 'INR',
           name: 'StayEasy',

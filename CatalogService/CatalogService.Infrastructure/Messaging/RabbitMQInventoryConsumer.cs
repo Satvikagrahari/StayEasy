@@ -42,6 +42,12 @@ namespace CatalogService.Infrastructure.Messaging
         public List<BookingItemDto> BookingItems { get; set; } = new();
     }
 
+    public class BookingPaymentFailedIntegrationEvent
+    {
+        public Guid BookingId { get; set; }
+        public List<BookingItemDto> BookingItems { get; set; } = new();
+    }
+
     public class RabbitMQInventoryConsumer : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
@@ -67,6 +73,7 @@ namespace CatalogService.Infrastructure.Messaging
             _channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: "booking.created");
             _channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: "booking.cancelled");
             _channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: "booking.completed");
+            _channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: "booking.payment-failed");
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -133,6 +140,23 @@ namespace CatalogService.Infrastructure.Messaging
                             }
                             await db.SaveChangesAsync(stoppingToken);
                             _logger.LogInformation("Inventory restored for completed booking {BookingId}", ev.BookingId);
+                        }
+                    }
+                    else if (routingKey == "booking.payment-failed")
+                    {
+                        var ev = JsonSerializer.Deserialize<BookingPaymentFailedIntegrationEvent>(message, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        if (ev != null && ev.BookingItems != null)
+                        {
+                            foreach (var item in ev.BookingItems)
+                            {
+                                var roomType = await db.RoomTypes.FindAsync(new object[] { item.RoomTypeId }, stoppingToken);
+                                if (roomType != null)
+                                {
+                                    roomType.AvailableRooms += 1;
+                                }
+                            }
+                            await db.SaveChangesAsync(stoppingToken);
+                            _logger.LogInformation("Inventory restored after payment failure for booking {BookingId}", ev.BookingId);
                         }
                     }
 
