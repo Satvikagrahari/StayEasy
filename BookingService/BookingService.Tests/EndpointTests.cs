@@ -29,7 +29,7 @@ public class BookingControllerEndpointTests
         return controller;
     }
 
-    [Fact]
+    [Test]
     public async Task GetAllBookings_ReturnsOk()
     {
         var service = new Mock<IBookingService>();
@@ -38,10 +38,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.GetAllBookings();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetMyBookings_ReturnsOk()
     {
         var userId = Guid.NewGuid();
@@ -51,10 +51,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.GetMyBookings();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task Checkout_ReturnsOk()
     {
         var userId = Guid.NewGuid();
@@ -65,10 +65,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.Checkout("SALE10");
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetPendingBookings_ReturnsOk()
     {
         var service = new Mock<IBookingService>();
@@ -77,10 +77,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.GetPendingBookings();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetConfirmedBookings_ReturnsOk()
     {
         var service = new Mock<IBookingService>();
@@ -89,10 +89,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.GetConfirmedBookings();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateBookingStatus_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IBookingService>();
@@ -101,10 +101,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.UpdateBookingStatus(Guid.NewGuid(), BookingStatus.Confirmed);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task CreateOrder_WhenServiceThrows_ReturnsBadRequest()
     {
         var service = new Mock<IBookingService>();
@@ -113,10 +113,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.CreateOrder(Guid.NewGuid());
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task VerifyPayment_WhenInvalid_ReturnsBadRequest()
     {
         var service = new Mock<IBookingService>();
@@ -125,10 +125,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.VerifyPayment(new RazorpayPaymentVerificationRequest());
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task CancelBooking_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IBookingService>();
@@ -137,10 +137,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.CancelBooking(Guid.NewGuid());
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task RequestRefund_WhenInvalid_ReturnsBadRequest()
     {
         var service = new Mock<IBookingService>();
@@ -149,10 +149,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.RequestRefund(Guid.NewGuid());
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task ApproveRefund_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IBookingService>();
@@ -161,10 +161,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.ApproveRefund(Guid.NewGuid());
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetInvoice_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IBookingService>();
@@ -173,10 +173,10 @@ public class BookingControllerEndpointTests
 
         var result = await controller.GetInvoice(Guid.NewGuid());
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetAdminReport_ReturnsFile()
     {
         var service = new Mock<IBookingService>();
@@ -185,7 +185,7 @@ public class BookingControllerEndpointTests
 
         var result = await controller.GetAdminReport();
 
-        Assert.IsType<FileContentResult>(result);
+        Assert.That(result, Is.InstanceOf<FileContentResult>());
     }
 }
 
@@ -209,7 +209,7 @@ public class CartControllerEndpointTests
         return controller;
     }
 
-    [Fact]
+    [Test]
     public async Task AddToCart_ReturnsOk()
     {
         var cartService = new Mock<ICartService>();
@@ -217,10 +217,10 @@ public class CartControllerEndpointTests
 
         var result = await controller.AddToCart(new CreateCartItemRequest());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetCart_ReturnsOk()
     {
         var cartService = new Mock<ICartService>();
@@ -229,10 +229,10 @@ public class CartControllerEndpointTests
 
         var result = await controller.GetCart();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task Remove_ReturnsOk()
     {
         var cartService = new Mock<ICartService>();
@@ -240,6 +240,7 @@ public class CartControllerEndpointTests
 
         var result = await controller.Remove(Guid.NewGuid());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 }
+

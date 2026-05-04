@@ -1,0 +1,1 @@
+﻿# StayEasy - Project Documentation

@@ -34,7 +34,7 @@ public class AuthControllerEndpointTests
         return context;
     }
 
-    [Fact]
+    [Test]
     public async Task Signup_ReturnsCreated()
     {
         var authService = new Mock<IAuthService>();
@@ -42,11 +42,12 @@ public class AuthControllerEndpointTests
 
         var result = await controller.Signup(new SignupRequest());
 
-        var status = Assert.IsType<StatusCodeResult>(result);
-        Assert.Equal(StatusCodes.Status201Created, status.StatusCode);
+        Assert.That(result, Is.InstanceOf<StatusCodeResult>());
+        var status = (StatusCodeResult)result;
+        Assert.That(status.StatusCode, Is.EqualTo(StatusCodes.Status201Created));
     }
 
-    [Fact]
+    [Test]
     public async Task Login_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -56,10 +57,10 @@ public class AuthControllerEndpointTests
 
         var result = await controller.Login(new LoginRequest());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task Refresh_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -69,10 +70,10 @@ public class AuthControllerEndpointTests
 
         var result = await controller.Refresh(new RefreshTokenRequest());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task Logout_ReturnsNoContent()
     {
         var userId = Guid.NewGuid();
@@ -81,11 +82,11 @@ public class AuthControllerEndpointTests
 
         var result = await controller.Logout();
 
-        Assert.IsType<NoContentResult>(result);
+        Assert.That(result, Is.InstanceOf<NoContentResult>());
         authService.Verify(x => x.LogoutAsync(userId), Times.Once);
     }
 
-    [Fact]
+    [Test]
     public void GetMe_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -93,10 +94,10 @@ public class AuthControllerEndpointTests
 
         var result = controller.GetMe();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task SendOtp_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -104,10 +105,10 @@ public class AuthControllerEndpointTests
 
         var result = await controller.SendOtp(new SendOtpRequest());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task VerifyOtp_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -115,10 +116,10 @@ public class AuthControllerEndpointTests
 
         var result = await controller.VerifyOtp(new VerifyOtpRequest());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task SendPasswordResetOtp_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -126,10 +127,10 @@ public class AuthControllerEndpointTests
 
         var result = await controller.SendPasswordResetOtp(new PasswordResetSendOtpRequest());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task VerifyPasswordResetOtp_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -137,10 +138,10 @@ public class AuthControllerEndpointTests
 
         var result = await controller.VerifyPasswordResetOtp(new PasswordResetVerifyOtpRequest());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task ResetPassword_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -148,7 +149,7 @@ public class AuthControllerEndpointTests
 
         var result = await controller.ResetPassword(new ResetPasswordRequest());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 }
 
@@ -172,7 +173,7 @@ public class UsersControllerEndpointTests
         return controller;
     }
 
-    [Fact]
+    [Test]
     public async Task GetProfile_ReturnsOk()
     {
         var userId = Guid.NewGuid();
@@ -183,10 +184,10 @@ public class UsersControllerEndpointTests
 
         var result = await controller.GetProfile();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateProfile_ReturnsNoContent()
     {
         var userId = Guid.NewGuid();
@@ -195,14 +196,14 @@ public class UsersControllerEndpointTests
 
         var result = await controller.UpdateProfile(new UpdateProfileRequest());
 
-        Assert.IsType<NoContentResult>(result);
+        Assert.That(result, Is.InstanceOf<NoContentResult>());
         authService.Verify(x => x.UpdateProfileAsync(userId, It.IsAny<UpdateProfileRequest>()), Times.Once);
     }
 }
 
 public class AdminUsersControllerEndpointTests
 {
-    [Fact]
+    [Test]
     public async Task GetAllUsers_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -211,10 +212,10 @@ public class AdminUsersControllerEndpointTests
 
         var result = await controller.GetAllUsers();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateStatus_ReturnsNoContent()
     {
         var authService = new Mock<IAuthService>();
@@ -222,10 +223,10 @@ public class AdminUsersControllerEndpointTests
 
         var result = await controller.UpdateStatus(Guid.NewGuid(), new UpdateUserStatusRequest { IsActive = true });
 
-        Assert.IsType<NoContentResult>(result);
+        Assert.That(result, Is.InstanceOf<NoContentResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task DeleteUser_ReturnsNoContent()
     {
         var authService = new Mock<IAuthService>();
@@ -233,13 +234,13 @@ public class AdminUsersControllerEndpointTests
 
         var result = await controller.DeleteUser(Guid.NewGuid());
 
-        Assert.IsType<NoContentResult>(result);
+        Assert.That(result, Is.InstanceOf<NoContentResult>());
     }
 }
 
 public class InternalControllerEndpointTests
 {
-    [Fact]
+    [Test]
     public async Task GetUserEmail_WhenProfileMissing_ReturnsNotFound()
     {
         var authService = new Mock<IAuthService>();
@@ -249,10 +250,10 @@ public class InternalControllerEndpointTests
 
         var result = await controller.GetUserEmail(Guid.NewGuid());
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetUserName_WhenProfileExists_ReturnsOk()
     {
         var authService = new Mock<IAuthService>();
@@ -262,6 +263,8 @@ public class InternalControllerEndpointTests
 
         var result = await controller.GetUserName(Guid.NewGuid());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 }
+
+

@@ -13,117 +13,117 @@ public class AdminControllerEndpointTests
 {
     private const string BookingAllUrl = "https://localhost:7071/api/booking/all";
 
-    [Fact]
+    [Test]
     public async Task GetDashboardSummary_ReturnsOk()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetDashboardSummary();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetDashboardStats_ReturnsOk()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetDashboardStats();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetAllBookings_WithFilter_ReturnsOk()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetAllBookings(status: "Confirmed");
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetRecentBookings_ReturnsOk()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetRecentBookings(5);
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetBookingTrends_ReturnsOk()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetBookingTrends(7);
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetRevenueTrends_ReturnsOk()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetRevenueTrends(6);
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetBookingStatusDistribution_ReturnsOk()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetBookingStatusDistribution();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateBookingStatus_WhenStatusMissing_ReturnsBadRequest()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.UpdateBookingStatus(Guid.NewGuid(), string.Empty);
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetOccupancyReport_InvalidDates_ReturnsBadRequest()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetOccupancyReport(DateTime.UtcNow, DateTime.UtcNow.AddDays(-1));
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetRevenueReport_ReturnsOk()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetRevenueReport();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetCancellationReport_ReturnsOk()
     {
         var controller = BuildControllerWithBookings(SampleBookings());
 
         var result = await controller.GetCancellationReport();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task ApproveRefund_ForwardsStatusCode()
     {
         var handler = new StubHttpMessageHandler(req =>
@@ -140,8 +140,9 @@ public class AdminControllerEndpointTests
 
         var result = await controller.ApproveRefund(Guid.NewGuid());
 
-        var status = Assert.IsType<StatusCodeResult>(result);
-        Assert.Equal(StatusCodes.Status204NoContent, status.StatusCode);
+        Assert.That(result, Is.InstanceOf<StatusCodeResult>());
+        var status = (StatusCodeResult)result;
+        Assert.That(status.StatusCode, Is.EqualTo(StatusCodes.Status204NoContent));
     }
 
     private static AdminController BuildControllerWithBookings(List<BookingDto> bookings)
@@ -225,3 +226,5 @@ public class AdminControllerEndpointTests
         }
     }
 }
+
+

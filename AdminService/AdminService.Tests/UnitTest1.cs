@@ -4,17 +4,17 @@ namespace AdminService.Tests;
 
 public class BookingDtoTests
 {
-    [Fact]
+    [Test]
     public void NewBookingDto_HasExpectedDefaults()
     {
         var dto = new BookingDto();
 
-        Assert.Equal(string.Empty, dto.Status);
-        Assert.NotNull(dto.BookingItems);
-        Assert.Empty(dto.BookingItems);
+        Assert.That(dto.Status, Is.EqualTo(string.Empty));
+        Assert.That(dto.BookingItems, Is.Not.Null);
+        Assert.That(dto.BookingItems, Is.Empty);
     }
 
-    [Fact]
+    [Test]
     public void BookingTrendDto_AllowsSettingValues()
     {
         var trend = new BookingTrendDto
@@ -23,7 +23,9 @@ public class BookingDtoTests
             Count = 7
         };
 
-        Assert.Equal("2026-05-01", trend.Date);
-        Assert.Equal(7, trend.Count);
+        Assert.That(trend.Date, Is.EqualTo("2026-05-01"));
+        Assert.That(trend.Count, Is.EqualTo(7));
     }
 }
+
+

@@ -4,17 +4,17 @@ namespace IdentityService.Tests;
 
 public class UserTests
 {
-    [Fact]
+    [Test]
     public void NewUser_HasExpectedDefaults()
     {
         var user = new User();
 
-        Assert.Equal("Guest", user.Role);
-        Assert.True(user.IsActive);
-        Assert.False(user.IsVerified);
+        Assert.That(user.Role, Is.EqualTo("Guest"));
+        Assert.That(user.IsActive, Is.True);
+        Assert.That(user.IsVerified, Is.False);
     }
 
-    [Fact]
+    [Test]
     public void User_AllowsSettingCoreFields()
     {
         var id = Guid.NewGuid();
@@ -25,8 +25,10 @@ public class UserTests
             Email = "satvik@example.com"
         };
 
-        Assert.Equal(id, user.Id);
-        Assert.Equal("satvik", user.UserName);
-        Assert.Equal("satvik@example.com", user.Email);
+        Assert.That(user.Id, Is.EqualTo(id));
+        Assert.That(user.UserName, Is.EqualTo("satvik"));
+        Assert.That(user.Email, Is.EqualTo("satvik@example.com"));
     }
 }
+
+

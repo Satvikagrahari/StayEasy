@@ -4,17 +4,17 @@ namespace CatalogService.Tests;
 
 public class HotelTests
 {
-    [Fact]
+    [Test]
     public void NewHotel_HasExpectedDefaults()
     {
         var hotel = new Hotel();
 
-        Assert.True(hotel.IsActive);
-        Assert.Null(hotel.ImageUrls);
-        Assert.Null(hotel.RoomTypes);
+        Assert.That(hotel.IsActive, Is.True);
+        Assert.That(hotel.ImageUrls, Is.Null);
+        Assert.That(hotel.RoomTypes, Is.Null);
     }
 
-    [Fact]
+    [Test]
     public void Hotel_AllowsSettingIdentityFields()
     {
         var hotelId = Guid.NewGuid();
@@ -24,7 +24,9 @@ public class HotelTests
             Name = "StayEasy Deluxe"
         };
 
-        Assert.Equal(hotelId, hotel.HotelId);
-        Assert.Equal("StayEasy Deluxe", hotel.Name);
+        Assert.That(hotel.HotelId, Is.EqualTo(hotelId));
+        Assert.That(hotel.Name, Is.EqualTo("StayEasy Deluxe"));
     }
 }
+
+

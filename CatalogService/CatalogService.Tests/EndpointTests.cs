@@ -9,7 +9,7 @@ namespace CatalogService.Tests;
 
 public class HotelsControllerEndpointTests
 {
-    [Fact]
+    [Test]
     public async Task Create_ReturnsCreated()
     {
         var service = new Mock<IHotelService>();
@@ -17,11 +17,12 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.Create(new CreateHotelRequest());
 
-        var status = Assert.IsType<StatusCodeResult>(result);
-        Assert.Equal(201, status.StatusCode);
+        Assert.That(result, Is.InstanceOf<StatusCodeResult>());
+        var status = (StatusCodeResult)result;
+        Assert.That(status.StatusCode, Is.EqualTo(201));
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateHotel_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IHotelService>();
@@ -30,10 +31,10 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.UpdateHotel(Guid.NewGuid(), new UpdateHotelRequest());
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task DeactivateHotel_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IHotelService>();
@@ -42,10 +43,10 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.DeactivateHotel(Guid.NewGuid());
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task DeleteHotel_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IHotelService>();
@@ -54,10 +55,10 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.DeleteHotel(Guid.NewGuid());
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task AddRoom_ReturnsOk()
     {
         var service = new Mock<IHotelService>();
@@ -65,10 +66,10 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.AddRoom(new CreateRoomTypeRequest());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateRoom_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IHotelService>();
@@ -77,10 +78,10 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.UpdateRoom(Guid.NewGuid(), new UpdateRoomTypeRequest());
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task DeleteRoomType_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IHotelService>();
@@ -89,10 +90,10 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.DeleteRoomType(Guid.NewGuid());
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetAllHotels_ReturnsOk()
     {
         var service = new Mock<IHotelService>();
@@ -101,10 +102,10 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.GetAllHotels();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetHotelsByRoomType_ReturnsOk()
     {
         var service = new Mock<IHotelService>();
@@ -113,10 +114,10 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.GetHotelsByRoomType("Deluxe");
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetById_ReturnsOk()
     {
         var service = new Mock<IHotelService>();
@@ -125,10 +126,10 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.GetById(Guid.NewGuid());
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
     }
 
-    [Fact]
+    [Test]
     public async Task GetRoomById_WhenMissing_ReturnsNotFound()
     {
         var service = new Mock<IHotelService>();
@@ -137,6 +138,8 @@ public class HotelsControllerEndpointTests
 
         var result = await controller.GetRoomById(Guid.NewGuid());
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.That(result, Is.InstanceOf<NotFoundResult>());
     }
 }
+
+
