@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { switchMap } from 'rxjs/operators';
+
 import { AuthService } from '../../core/services/auth.service';
 import { SignupRequest } from '../../core/models/auth.models';
 
@@ -91,9 +91,7 @@ export class RegisterComponent {
       phoneNumber: phoneNumber!
     };
 
-    this.authService.signup(signupRequest).pipe(
-      switchMap(() => this.authService.sendOtp({ email: email! }))
-    ).subscribe({
+    this.authService.signup(signupRequest).subscribe({
       next: () => {
         this.isLoading = false;
         this.router.navigate(['/verify-otp'], { queryParams: { email } });
